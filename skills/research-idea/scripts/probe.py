@@ -172,6 +172,49 @@ def lock_inputs(folder):
     return snapshot
 
 
+def verify_inputs(folder):
+    """Recompute declared input hashes read-only; never creates or repairs a lock."""
+    folder = Path(folder).resolve()
+    plan = read_record(folder, "probe-plan.json")
+    entry = plan.get("implementation")
+    if not isinstance(entry, dict) or "inputs" not in entry:
+        raise ProbeError("verify-inputs: probe-plan.json does not declare implementation.inputs; "
+                         "this legacy record has no frozen inputs (add the field and run "
+                         "lock-inputs; seal/check keep their old behavior)")
+    if not isinstance(entry.get("path"), str) or not entry["path"].strip():
+        raise ProbeError("verify-inputs: probe-plan.json: implementation.path must name a local file")
+    paths = declared_inputs(folder, entry)
+    if not (folder / INPUT_LOCK).is_file():
+        raise ProbeError(f"verify-inputs: {INPUT_LOCK} not found; run lock-inputs first")
+    lock = read_record(folder, INPUT_LOCK)
+    if not isinstance(lock.get("plan_sha256"), str) or not isinstance(lock.get("inputs_sha256"), str):
+        raise ProbeError(f"{INPUT_LOCK}: fill in plan_sha256 and inputs_sha256")
+    locked = lock.get("files")
+    if not isinstance(locked, dict) or not all(isinstance(name, str) and isinstance(value, str)
+                                               for name, value in locked.items()):
+        raise ProbeError(f"{INPUT_LOCK}: files must map declared paths to SHA-256 values")
+    locked_paths = {}
+    for name in locked:
+        path = local_artifact(folder, name)
+        if path is None:
+            raise ProbeError(f"{INPUT_LOCK}: invalid local file path: {name!r}")
+        locked_paths[name] = path
+    candidates = {**locked_paths, **paths}
+    present, missing = {}, set()
+    for name, path in candidates.items():
+        if path.is_file():
+            present[name] = path
+        else:
+            missing.add(name)
+    files = artifact_digests(present)
+    changed = sorted(name for name, digest in locked.items()
+                     if name in files and digest != files[name])
+    report = dict(ok=not (changed or missing or set(paths) != set(locked)),
+                  plan_sha256=lock["plan_sha256"], inputs_sha256=lock["inputs_sha256"], files=files,
+                  changed=changed, missing=sorted(missing), extra=sorted(set(paths) ^ set(locked)))
+    return report
+
+
 def read_result(folder, *, sealing=False):
     folder = Path(folder).resolve()
     plan = check_plan(folder)
@@ -335,7 +378,8 @@ def check_result(folder):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("plan", "freeze", "lock-inputs", "seal", "review-input", "check"))
+    parser.add_argument("mode", choices=("plan", "freeze", "lock-inputs", "verify-inputs",
+                                        "seal", "review-input", "check"))
     parser.add_argument("folder", type=Path)
     parser.add_argument("--full", action="store_true",
                         help="with review-input: also show the author's result (explicit request)")
@@ -348,6 +392,10 @@ def main():
             check_plan(args.folder, require_claim=True)
             print("plan: ready to run (structure only)")
             return 0
+        if args.mode == "verify-inputs":
+            report = verify_inputs(args.folder)
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0 if report["ok"] else 3
         lock_commands = {"freeze": freeze_plan, "lock-inputs": lock_inputs, "seal": seal_run}
         if args.mode in lock_commands:
             lock = lock_commands[args.mode](args.folder)
