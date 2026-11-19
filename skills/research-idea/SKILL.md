@@ -100,7 +100,7 @@ python scripts/refute.py stability granularity
 
 ### 步骤 3.6 · 最小探针（新候选必做）
 
-用 `kb.py draft <短名>` 创建候选，先写一条决定推进的核心主张，再做受控实验、小构造或关键引理。作者写明探针实际支持的主张；独立复核者核查原始证据、对照和最强替代解释。只有证据直接支持核心主张（`direct`）的候选才能推进。只验证代理指标或弱命题就暂缓；缩小主张后须重新复核。见 `references/probe-first.md`。
+用 `kb.py draft <短名>` 创建候选，先写一条决定推进的核心主张，再做受控实验、小构造或关键引理。作者写明探针实际支持的主张。`probe.py review-input` 默认只给首轮材料：冻结主张、复验条件、证据引用和复核摘要，不含作者判定、支持陈述、观察、局限和后续建议；复核者先独立核查原始证据、对照和最强替代解释并记录判断，再决定是否加 `--full` 查看完整记录。复核记录须声明 `reviewer_type` 与 `author_result_exposure`（自我声明，不验证身份；缺字段按 `unspecified` 处理，不当作盲审）。只有证据直接支持核心主张（`direct`）的候选才能推进。只验证代理指标或弱命题就暂缓；缩小主张后须重新复核。见 `references/probe-first.md`。
 
 ### 步骤 4 · 还原科学逻辑链
 
@@ -157,7 +157,7 @@ mermaid 画三列：研究挑战 → 方法/引理 → 验证。写清谁会用�
 ```
 ideas/<日期>-<短名>/
 ├── probe-plan.json / probe-result.json  核心主张与作者判定
-├── probe-review.json  独立复核及其所审材料
+├── probe-review.json  独立复核、所审材料摘要及复核者声明
 ├── evidence/     可复核的读数、命令或数学推导
 ├── idea.md        数学定义 / 锚点 / 逻辑链 / 排期 / 框架图 / 风险
 ├── anchors.md     锚点清单 + 每篇「做到哪、卡在哪」

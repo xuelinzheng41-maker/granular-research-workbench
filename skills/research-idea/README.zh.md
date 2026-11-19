@@ -18,7 +18,7 @@ python scripts/selftest.py
 
 1. 运行 `python scripts/kb.py draft my-topic`。记录命令输出的候选 ID 和目录。
 2. 填写计划：一条核心主张、适用范围、最强替代解释、对照和停止条件。先制定计划，再做小验证。数学题可以做构造或检查引理；实验题要留存对照、口径及原始读数。
-3. 填写结果，写清证据实际支持的范围。作者填 `advance` 只是建议，须将 `submitted_for_review` 设为 `true`；交给未参与生成的人按[复核指南](references/review-protocol.md)核查。复核若发现只测了较弱命题或代理指标，先缩小主张后重审，或暂缓。
+3. 填写结果，写清证据实际支持的范围。作者填 `advance` 只是建议，须将 `submitted_for_review` 设为 `true`；交给未参与生成的人按[复核指南](references/review-protocol.md)核查。`probe.py review-input` 默认只给首轮材料（冻结主张、复验条件、证据引用和复核摘要），不展示作者结果；复核者先独立记录判断，再决定是否加 `--full` 查看完整记录，并声明是否事先接触过作者结果。复核若发现只测了较弱命题或代理指标，先缩小主张后重审，或暂缓。
 4. 运行 `python scripts/probe.py check ideas/<ID>`。返回 `0` 后，再运行 `python scripts/kb.py scaffold <ID>` 生成提案草稿。`2` 表示记录缺失或不匹配，`3` 表示暂缓或反驳。把 `<ID>` 换成实际 ID；使用自定义产出目录时，以 `draft` 打印的目录为准。
 5. 按[检查清单](references/checklists.md)完善提案。有库用原始论文卡复核；无库可运行 `python scripts/grade.py --external ideas/<ID>` 辅助检查格式线索与文档结构，不能判断科学证据是否可靠。接入含 YAML 元数据的本地论文卡时，需先运行 `python -m pip install PyYAML`；无库流程不需要安装。
 
@@ -29,4 +29,4 @@ python scripts/selftest.py
 - [计算机实验方向](references/domain-experimental-cs.md)
 - [探针与推进判定](references/probe-first.md)
 
-评分不代表发表质量。工具不认证复核者身份，也不会自动上传材料；复核摘要用于核对材料版本，不等于正式预注册。未得到授权时，不要向第三方模型上传内部数据。
+评分不代表发表质量。工具不认证复核者身份，也不会自动上传材料；复核摘要用于核对材料版本，不等于正式预注册。复核记录里的 `reviewer_type` 与 `author_result_exposure` 只是自我声明，缺字段按 `unspecified` 显示而非盲审；旧记录没有声明字段仍可使用。未得到授权时，不要向第三方模型上传内部数据。

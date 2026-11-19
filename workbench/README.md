@@ -22,6 +22,8 @@ python -B workbench.py verify runs/digits-prototypes
 python -B workbench.py review-input runs/covering-refinement
 ~~~
 
+`review-input` 默认给首轮材料：冻结主张、复验条件（设定、对照、推进/停止条件）、证据文件及其 SHA-256、复核摘要；不展示作者判定、支持陈述、观察、局限和后续建议。需要核对作者结论时显式加 `--full`（先 `verify`，再用 `../skills/research-idea/scripts/probe.py review-input <目录> --full`）。
+
 已有运行不会被覆盖。需要重跑时使用新的输出目录。每次生成探针计划、逐项证据、作者结论和 SHA-256 清单。前三者进入清单，可编辑的独立复核记录不在其中。摘要可检出后续变动，不能证明记录时间或复核身份。
 
 | 路线 | 实际输出 | 当前解释 |
@@ -31,13 +33,17 @@ python -B workbench.py review-input runs/covering-refinement
 
 ## 请另一位研究者复核
 
-先把相应运行目录的计划和原始证据交给对方；Windows 上可直接用上方命令复算。复核人自行记录「哪条主张、证据位置、还能否由替代解释解释」，按 [复核规范](../skills/research-idea/references/review-protocol.md) 填该运行的复核记录和摘要，再执行：
+先把相应运行目录的计划和原始证据交给对方；Windows 上可直接用上方命令复算。复核人先按首轮材料独立记录「哪条主张、证据位置、还能否由替代解释解释」和自己的判定，再按需查看完整记录；按 [复核规范](../skills/research-idea/references/review-protocol.md) 填该运行的复核记录和摘要，并声明 `reviewer_type` 与 `author_result_exposure`：
 
 ~~~powershell
 python -B workbench.py check runs/covering-refinement
 ~~~
 
 `submitted_for_review` 仅表示送审，`status` 记录作者结论。两个示例都触发停止条件，因此写 `refuted`，但仍可送审。`check` 缺复核或作者与复核者意见冲突时返回 2；记录正确且驳回或暂缓时返回 3；只有作者建议推进且复核认为有直接证据时才返回 0。运行器不代填复核，也不自动写提案。
+
+两项声明只是复核者的说法，工具不验证身份、时间、顺序或独立性；缺字段显示 `unspecified`，不推定为盲审。摘要绑定计划、作者结果和证据文件，材料不变时旧复核继续有效，任一改动都要求重审；旧记录没有声明字段仍可复核。工作台运行的清单还绑定生成该次运行的 `workbench.py` 源文件：本轮只改复核材料的展示视图，`workbench.py` 逐字节未变，因此基线版本生成的运行仍可用新版本 `verify` 和 `review-input`；若更换运行器，旧运行保留原记录并用原版本复算，或在新目录重跑。
+
+转交原始证据时，供给者须核实文件内没有嵌入作者裁决（结论性注释、标题等），文件名、目录结构和上下文也可能暴露结论；首轮包只整理结构化引用，不替代这项检查，也不等于盲法。
 
 在仓库根目录执行 `python -B -m unittest discover -s workbench/tests -v` 可运行工作台回归；未安装 scikit-learn 时跳过 Digits 测试。
 

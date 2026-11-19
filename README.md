@@ -72,13 +72,22 @@ python -B workbench/workbench.py verify workbench/runs/digits-prototypes
 
 ## 4. 交给别人复算和裁决
 
-数学与实验运行都会生成探针计划、原始证据、SHA-256 清单和空白复核记录。先复算，再把材料交给未参与生成的人，填写证据位置、替代解释和裁决。只有直接支持限定主张才放行；暂缓和反驳都保留记录。摘要能检出材料变更，不认证身份，也不能代替正式预注册。
+数学与实验运行都会生成探针计划、原始证据、SHA-256 清单和空白复核记录。先复算，再把首轮材料交给未参与生成的人：默认视图只给冻结主张、复验条件、证据引用和复核摘要，不展示作者判定、支持陈述、观察、局限和后续建议。复核者先独立记录自己的判断，再决定是否显式查看完整记录：
 
 ~~~bash
 python -B workbench/workbench.py review-input workbench/runs/covering-refinement
-# 独立复核者填写该次运行的 probe-review.json 后执行：
+# 复核者独立检查后，如确需核对作者结论（显式选择完整视图）：
+python -B workbench/workbench.py verify workbench/runs/covering-refinement
+python -B skills/research-idea/scripts/probe.py review-input workbench/runs/covering-refinement --full
+~~~
+
+复核者在候选目录填写该次运行的 `probe-review.json`：`reviewer`、`verdict`、`evidence_artifact`、`evidence_location`、`rival_check`、`reason`、`review_input_sha256`，并声明 `reviewer_type`（`human`/`ai_agent`）和 `author_result_exposure`（`none`/`seen`：给出判定前是否看过作者结果）。这两项是自我声明，工具不验证身份、时间或独立性；缺字段按 `unspecified` 显示，不当作盲审。只有 `direct` 会放行，暂缓和反驳都保留记录。
+
+~~~bash
 python -B workbench/workbench.py check workbench/runs/covering-refinement
 ~~~
+
+摘要绑定计划、结果和证据文件：改主张、改结果或改任一证据都会使旧复核失效并阻断放行；未复核不能放行。摘要能检出误用和材料变更，不认证身份，也不能代替正式预注册。转交原始证据时，供给者须核实文件内没有嵌入作者裁决，文件名和上下文也可能暴露结论。探针候选同样用 `probe.py review-input ideas/<ID> [--full]` 获取首轮或完整材料；旧记录没有新增声明字段时仍可使用，但显示 `unspecified`。
 
 还可以用内置的四个合成候选走一次盲审：从原始图边表或事件流重算，把生成的复核材料交给另一位研究者，先记录裁决，再揭晓参考判定。
 

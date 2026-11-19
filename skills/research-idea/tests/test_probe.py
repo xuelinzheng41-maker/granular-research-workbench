@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import subprocess
@@ -138,6 +139,123 @@ class ProbeWorkflow(unittest.TestCase):
         old = (self.folder / "idea.md").read_bytes()
         self.assertEqual(self.scaffold().returncode, 2)
         self.assertEqual((self.folder / "idea.md").read_bytes(), old)
+
+
+AUTHOR_SENTINELS = dict(observation="SENTINEL-OBSERVATION-7a1",
+                         supported_claim="SENTINEL-SUPPORTED-CLAIM-7b2",
+                         limitations="SENTINEL-LIMITATIONS-7c3",
+                         next_step="SENTINEL-NEXT-STEP-7d4")
+
+
+class ReviewPacketViews(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+        self.env = dict(os.environ, LAB_IDEAS=tmp.name, LAB_KB=tmp.name,
+                        LAB_DATA=tmp.name, PYTHONDONTWRITEBYTECODE="1")
+        output = self.run_cli("kb.py", "draft", "view-demo")
+        self.assertEqual(output.returncode, 0, output.stderr)
+        self.folder, = self.root.iterdir()
+        self.record("probe-plan.json", PLAN)
+        (self.folder / "calculation.txt").write_bytes(b"Witness lines.\n")
+        self.result = dict(status="advance", submitted_for_review=True,
+                           observation=AUTHOR_SENTINELS["observation"],
+                           supported_claim=AUTHOR_SENTINELS["supported_claim"],
+                           limitations=AUTHOR_SENTINELS["limitations"],
+                           next_step=AUTHOR_SENTINELS["next_step"],
+                           artifacts=["calculation.txt"])
+        self.record("probe-result.json", self.result)
+
+    def run_cli(self, script, *args):
+        return subprocess.run([sys.executable, str(SCRIPTS / script), *map(str, args)],
+                              env=self.env, text=True, capture_output=True, check=False)
+
+    def record(self, name, value):
+        (self.folder / name).write_text(json.dumps(value), encoding="utf-8")
+
+    def packet(self, *args):
+        result = self.run_cli("probe.py", "review-input", self.folder, *args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout
+
+    def check(self):
+        return self.run_cli("probe.py", "check", self.folder)
+
+    def review(self, digest, **extra):
+        record = dict(reviewer="test-reviewer", verdict="direct", evidence_artifact="calculation.txt",
+                      evidence_location="Line 1: two listed partitions",
+                      rival_check="Their blocks differ even though the sizes agree",
+                      reason="Both listed partitions witness the claim", review_input_sha256=digest)
+        record.update(extra)
+        self.record("probe-review.json", record)
+
+    def test_first_round_view_withholds_author_result(self):
+        text = self.packet()
+        packet = json.loads(text)
+        self.assertEqual(packet["core_claim"], PLAN["core_claim"])
+        for key in ("status", "supported_claim", "observation", "limitations", "next_step"):
+            self.assertNotIn(key, packet)
+            self.assertNotIn(f'"{key}"', text)
+        for value in AUTHOR_SENTINELS.values():
+            self.assertNotIn(value, text)
+        for key in ("source_kind", "source", "question", "kind", "rival", "setup",
+                    "control", "advance_if", "stop_if", "budget_minutes"):
+            self.assertEqual(packet["plan"][key], PLAN[key])
+        self.assertEqual(packet["artifacts"], ["calculation.txt"])
+        self.assertEqual(packet["artifact_sha256"]["calculation.txt"],
+                         hashlib.sha256(b"Witness lines.\n").hexdigest())
+        summary = packet["review_summary"]
+        self.assertEqual(summary["view"], "first_round")
+        self.assertIn("--full", summary["full_view"])
+        self.assertEqual(summary["record_fields"]["provenance"],
+                         {"reviewer_type": ["human", "ai_agent", "unspecified"],
+                          "author_result_exposure": ["none", "seen", "unspecified"]})
+
+    def test_full_view_is_explicit_and_keeps_the_legacy_digest(self):
+        brief = json.loads(self.packet())
+        full = json.loads(self.packet("--full"))
+        self.assertEqual(brief["review_input_sha256"], full["review_input_sha256"])
+        self.assertEqual(full["plan"], PLAN)
+        self.assertEqual(full["supported_claim"], AUTHOR_SENTINELS["supported_claim"])
+        self.assertEqual(full["author_result"], self.result)
+        artifacts = {"calculation.txt": hashlib.sha256(b"Witness lines.\n").hexdigest()}
+        expected = hashlib.sha256(json.dumps([PLAN, self.result, artifacts], sort_keys=True,
+                                             ensure_ascii=False).encode("utf-8")).hexdigest()
+        self.assertEqual(full["review_input_sha256"], expected)
+        rejected = self.run_cli("probe.py", "check", self.folder, "--full")
+        self.assertEqual(rejected.returncode, 2)
+        self.assertIn("--full only applies to review-input", rejected.stderr)
+
+    def test_recorded_provenance_is_a_declaration_and_missing_is_not_blind(self):
+        digest = json.loads(self.packet())["review_input_sha256"]
+        self.review(digest, reviewer_type="human", author_result_exposure="none")
+        result = self.check()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("reviewer_type=human", result.stdout)
+        self.assertIn("author_result_exposure=none", result.stdout)
+        self.review(digest)
+        result = self.check()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("reviewer_type=unspecified", result.stdout)
+        self.assertIn("author_result_exposure=unspecified", result.stdout)
+        self.assertIn("unspecified provenance is not treated as a blind review", result.stdout)
+        self.review(digest, reviewer_type="robot", author_result_exposure="seen")
+        result = self.check()
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("reviewer_type must be one of", result.stderr)
+
+    def test_changed_claim_blocks_the_same_review(self):
+        digest = json.loads(self.packet())["review_input_sha256"]
+        self.review(digest, reviewer_type="ai_agent", author_result_exposure="none")
+        self.assertEqual(self.check().returncode, 0)
+        revised = dict(PLAN, core_claim=PLAN["core_claim"] + " Revised after review.")
+        self.record("probe-plan.json", revised)
+        result = self.check()
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("review again", result.stderr)
+        self.assertEqual(self.run_cli("kb.py", "scaffold", self.folder.name).returncode, 2)
+        self.assertFalse((self.folder / "idea.md").exists())
 
 
 if __name__ == "__main__":

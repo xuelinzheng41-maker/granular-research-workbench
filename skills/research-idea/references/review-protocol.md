@@ -5,7 +5,17 @@
 1. 先写一句核心主张：对象、量词/指标、实验条件或数学假设，以及哪种结果算支持。若只能检验较窄的子命题，不替作者把它扩大。
 2. 打开原始证据：复算一条关键数字或重走关键推导。实验要查同数据、预算、指标、对照及排除项；定理要查结论的量词、对象和边界。发现样本与独立验例分开。
 3. 给出判定并说明理由。`direct` 是直接支持限定主张；`proxy_only` 是仅给了相关读数或弱命题；`insufficient` 是缺必要材料；`contradicted` 是同一范围内已有相反证据。没看到核心读数就不要用“理论上可能”放行。
-4. 执行 `python scripts/probe.py review-input ideas/<ID>`，取得 `review_input_sha256`。在 `probe-review.json` 填复核者和判定，并标明 `evidence_artifact`（结果里列出的相对路径）、`evidence_location`（具体行、读数或推导）、`rival_check`（最强替代解释是否仍成立）及 `reason`。只有 `direct` 会放行；它必须填证据位置和替代解释。材料改动后重审。
+4. 执行 `python scripts/probe.py review-input ideas/<ID>`，取得首轮材料包和 `review_input_sha256`。默认视图只含冻结主张、复验条件（设定、对照、推进/停止条件、实现与复算命令）、证据文件及其 SHA-256、复核摘要；不展示作者判定、支持陈述、观察、局限和后续建议。先独立检查证据并记录自己的判断，再决定是否查看完整记录：
+
+   ~~~bash
+   python scripts/probe.py review-input ideas/<ID> --full
+   ~~~
+
+   在 `probe-review.json` 填 `reviewer`、`verdict`，并标明 `evidence_artifact`（结果里列出的相对路径）、`evidence_location`（具体行、读数或推导）、`rival_check`（最强替代解释是否仍成立）及 `reason`。另记 `reviewer_type`（`human`/`ai_agent`/`unspecified`）和 `author_result_exposure`（`none`/`seen`/`unspecified`：给出判定前是否看过作者结果）。只有 `direct` 会放行；它必须填证据位置和替代解释。材料改动后重审。
+
+5. `reviewer_type` 和 `author_result_exposure` 是自我声明：工具不验证身份、时间、顺序或独立性。缺字段或留空按 `unspecified` 处理，不能推定为盲审；旧记录没有这两个字段仍可复核、放行，但会显示 `unspecified`。摘要绑定计划、作者结果和证据文件；材料不变时旧复核继续有效，主张、结果或证据任一改动都必须重审。
+
+6. 转交原始证据时，供给者要核实文件本身没有嵌入作者裁决（结论性注释、标题或说明），并注意文件名、目录结构和上下文也可能暴露作者结论。首轮包只整理结构化引用，不替供给者做这项检查，也不等于盲法。
 
 | 主张 | 现有证据 | 如何判 |
 |---|---|---|

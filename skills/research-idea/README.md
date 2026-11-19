@@ -23,4 +23,4 @@ Linux / macOS：`export LAB_IDEAS="$(pwd)/ideas"`；Windows PowerShell：`$env:L
 3. 运行 `python scripts/probe.py check ideas/<ID>`；只有通过才运行 `python scripts/kb.py scaffold <ID>`。替换示例中的整段 `<ID>` 为实际候选 ID。状态码：`0` 可写草稿，`2` 记录缺失/不匹配，`3` 暂缓或已反驳。
 4. 用 [检查清单](references/checklists.md) 写正式草案。有库用原始论文卡复核；无库时可用 `python scripts/grade.py --external ideas/<ID>` 检查格式线索和占位内容。退出码和分数只描述格式诊断，不可作为科研通过或推进依据。
 
-组内分发版只含通用工具、模板和合成测试。系统不验证复核人身份，也不会自动把材料发给模型。不要把受限数据交给未授权第三方。新填的 `direct` 复核必须标出证据位置和替代解释；旧提案可照常评分，旧的推进记录重新落地时要补复核字段。
+组内分发版只含通用工具、模板和合成测试。系统不验证复核人身份，也不会自动把材料发给模型。不要把受限数据交给未授权第三方。首轮复核默认不展示作者结果；复核者先独立记录判断，再显式加 `probe.py review-input ideas/<ID> --full` 查看完整记录，并在 `probe-review.json` 声明 `reviewer_type` 和 `author_result_exposure`（自我声明，不验证身份；缺字段按 `unspecified` 处理，不当作盲审）。新填的 `direct` 复核必须标出证据位置和替代解释；旧提案可照常评分，旧的推进记录重新落地时要补复核字段。

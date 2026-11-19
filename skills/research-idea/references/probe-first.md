@@ -32,7 +32,7 @@ python scripts/probe.py check ideas/<ID>
 
 `draft` 重新检查候选资格。候选 ID、主张、预算和推进/停止条件从候选比较记录继承，不在探针中另填。补齐对象、对照，以及 `implementation.path` 和 `implementation.reproduce`（命令或证明核查步骤）；冻结后再执行。将 `freeze` 输出的 `plan_sha256` 填入结果的 `frozen_plan_sha256`，并在 `artifacts` 中列出实现或证明文件，以及至少一份独立的原始证据文件。复核者按说明手工核查或自行运行，工具不会自动执行任意命令。
 
-封存后若改变主张、对照或证据，请在新目录重做交接并重新送审。清单只能检查记录一致性，不证明命令何时运行或复核者身份。候选目录包含比较记录快照；只与获准查看这些材料的人共享。旧的无绑定指令仍可用于演练和已有记录，但不能当作候选已交接的证据。
+封存后若改变主张、对照或证据，请在新目录重做交接并重新送审。清单只能检查记录一致性，不证明命令何时运行或复核者身份；复核记录里的 `reviewer_type` 与 `author_result_exposure` 同样只是声明。旧记录缺少这两个字段时按 `unspecified` 显示，不当作盲审，也不阻止已有记录继续使用。候选目录包含比较记录快照；只与获准查看这些材料的人共享。
 
 ## 最小探针（兼容已有记录）
 
@@ -52,7 +52,7 @@ python scripts/probe.py check ideas/<ID>
    python scripts/probe.py review-input ideas/<ID>
    ~~~
 
-5. 把计划、结果和实际证据交给另一位同学，或不参与生成的独立审查会话。复核者先独立检查核心主张、适用条件、对照和原始证据，再参考作者的解释；按 [复核说明](review-protocol.md) 填写 `probe-review.json`。没有独立复核就保留候选，不自行补填。
+5. 把计划、实际证据和首轮材料包交给另一位同学，或不参与生成的独立审查会话。`review-input` 默认只给冻结主张、复验条件、证据引用和复核摘要，不含作者结果；复核者先独立检查核心主张、适用条件、对照和原始证据并记录自己的判断，再按需加 `--full` 查看作者结果，并在 `probe-review.json` 声明 `reviewer_type` 和 `author_result_exposure`；按 [复核说明](review-protocol.md) 填写其余字段。没有独立复核就保留候选，不自行补填。
 
    ~~~bash
    python scripts/probe.py check ideas/<ID>

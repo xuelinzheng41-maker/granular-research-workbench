@@ -58,7 +58,10 @@ class ReplayTests(unittest.TestCase):
             self.assertEqual(packet["case-b"]["computed_readout"]["shared_key"]["dedup"]["distinct_true_count"], 1)
             reviews = load(ROOT / "examples/reference-review.json")
             for case, row in reviews.items():
-                row.update(reviewer="reference mechanics test", review_input_sha256=packet[case]["review_input_sha256"])
+                row.update(reviewer="reference mechanics test",
+                           reviewer_type="human" if case == "case-a" else "ai_agent",
+                           author_result_exposure="none" if case == "case-a" else "seen",
+                           review_input_sha256=packet[case]["review_input_sha256"])
             verdicts.write_text(json.dumps(reviews), encoding="utf-8")
             target, = root.glob("*-case-d/readout.json")
             original = target.read_bytes()
@@ -72,6 +75,11 @@ class ReplayTests(unittest.TestCase):
             self.assertEqual(r.returncode, 0, r.stderr)
             self.assertEqual({r["case"] for r in load(root / "replay-report.json") if r["formal_files"]},
                              {"case-a", "case-d"})
+            for case in packet:
+                folder, = root.glob(f"*-{case}")
+                record = load(folder / "probe-review.json")
+                expected = {"case-a": ("human", "none")}.get(case, ("ai_agent", "seen"))
+                self.assertEqual((record["reviewer_type"], record["author_result_exposure"]), expected)
 
 
 if __name__ == "__main__":

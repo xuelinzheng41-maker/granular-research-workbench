@@ -189,13 +189,48 @@ def seal_run(folder):
     return lock
 
 
-def review_input(plan, result, artifacts):
+def review_snapshot(plan, result, artifacts):
     require_fields(plan, "probe-plan.json", "core_claim")
     require_fields(result, "probe-result.json", "supported_claim")
-    snapshot = json.dumps([plan, result, artifact_digests(artifacts)], sort_keys=True, ensure_ascii=False)
+    digests = artifact_digests(artifacts)
+    snapshot = json.dumps([plan, result, digests], sort_keys=True, ensure_ascii=False)
+    return digests, hashlib.sha256(snapshot.encode("utf-8")).hexdigest()
+
+
+def review_input(plan, result, artifacts):
+    _, digest = review_snapshot(plan, result, artifacts)
     return dict(core_claim=plan["core_claim"], supported_claim=result["supported_claim"],
-                artifacts=list(artifacts), review_input_sha256=hashlib.sha256(snapshot.encode("utf-8")).hexdigest(),
+                artifacts=list(artifacts), review_input_sha256=digest,
                 plan=plan, author_result=result)
+
+
+PLAN_VIEW = ("source_kind", "source", "question", "kind", "setup", "control",
+             "rival", "advance_if", "stop_if", "budget_minutes", "implementation")
+WITHHELD = ("author status", "author's strongest supporting statement", "author observation",
+            "author-stated limitations", "author next steps")
+REVIEWER_TYPES = ("human", "ai_agent", "unspecified")
+EXPOSURES = ("none", "seen", "unspecified")
+
+
+def review_brief(plan, result, artifacts):
+    """First-round packet: contract, provenance-free evidence references and review summary only."""
+    digests, digest = review_snapshot(plan, result, artifacts)
+    return dict(core_claim=plan["core_claim"],
+                plan={key: plan[key] for key in PLAN_VIEW if key in plan},
+                artifacts=list(artifacts), artifact_sha256=digests,
+                review_input_sha256=digest,
+                review_summary=dict(
+                    view="first_round",
+                    withholds=list(WITHHELD),
+                    full_view="probe.py review-input <folder> --full",
+                    record_fields=dict(
+                        required=["reviewer", "verdict", "evidence_artifact", "reason", "review_input_sha256"],
+                        direct_requires=["evidence_location", "rival_check"],
+                        verdicts=["direct", "proxy_only", "insufficient", "contradicted"],
+                        provenance=dict(reviewer_type=list(REVIEWER_TYPES),
+                                        author_result_exposure=list(EXPOSURES))),
+                    note=("Declarations only; identity, timing and independence are not verified. "
+                          "A missing provenance field is reported as unspecified, never as a blind review.")))
 
 
 def submitted(result):
@@ -203,10 +238,26 @@ def submitted(result):
     return result.get("submitted_for_review", result["status"] == "advance")
 
 
-def check_result(folder):
+def review_provenance(review, name="probe-review.json"):
+    """Return self-declared reviewer provenance; blank or absent fields stay unspecified."""
+    values = {}
+    for key, allowed in (("reviewer_type", REVIEWER_TYPES),
+                         ("author_result_exposure", EXPOSURES)):
+        value = review.get(key)
+        if value is None or (isinstance(value, str) and not value.strip()):
+            values[key] = "unspecified"
+        elif not isinstance(value, str) or value not in allowed:
+            raise ProbeError(f"{name}: {key} must be one of {', '.join(allowed)}")
+        else:
+            values[key] = value
+    return values
+
+
+def check_record(folder):
+    """Return the recorded outcome and, when a review was applied, its declared provenance."""
     folder, plan, result, artifacts = read_result(folder)
     if not submitted(result):
-        return result["status"]
+        return result["status"], None
     packet = review_input(plan, result, artifacts)
     name = "probe-review.json"
     review = read_record(folder, name)
@@ -221,17 +272,27 @@ def check_result(folder):
                 "insufficient": "inconclusive", "contradicted": "refuted"}
     if review["verdict"] not in statuses:
         raise ProbeError(f"{name}: verdict must be direct, proxy_only, insufficient or contradicted")
+    provenance = review_provenance(review, name)
     verdict = statuses[review["verdict"]]
     if verdict == "advance" and result["status"] != "advance":
         raise ProbeError(f"{name}: reviewer supports the claim but author did not; reconcile and review again")
-    return verdict
+    return verdict, provenance
+
+
+def check_result(folder):
+    return check_record(folder)[0]
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", choices=("plan", "freeze", "seal", "review-input", "check"))
     parser.add_argument("folder", type=Path)
+    parser.add_argument("--full", action="store_true",
+                        help="with review-input: also show the author's result (explicit request)")
     args = parser.parse_args()
+    if args.full and args.mode != "review-input":
+        print("probe: --full only applies to review-input", file=sys.stderr)
+        return 2
     try:
         if args.mode == "plan":
             check_plan(args.folder, require_claim=True)
@@ -245,13 +306,20 @@ def main():
             _, plan, result, artifacts = read_result(args.folder)
             if not submitted(result):
                 raise ProbeError("review-input: result has not been submitted for review")
-            print(json.dumps(review_input(plan, result, artifacts), ensure_ascii=False, indent=2))
+            packet = review_input(plan, result, artifacts) if args.full else review_brief(plan, result, artifacts)
+            print(json.dumps(packet, ensure_ascii=False, indent=2))
             return 0
-        status = check_result(args.folder)
+        status, provenance = check_record(args.folder)
     except (ValueError, OSError, RuntimeError) as exc:
         print(f"probe: {exc}", file=sys.stderr)
         return 2
     print(f"probe: {status} (record checks only; scientific judgment belongs to the reviewer)")
+    if provenance is not None:
+        print("probe: review record (self-declared; identity and timing are not verified): "
+              f"reviewer_type={provenance['reviewer_type']}, "
+              f"author_result_exposure={provenance['author_result_exposure']}")
+        if "unspecified" in provenance.values():
+            print("probe: unspecified provenance is not treated as a blind review")
     return 0 if status == "advance" else 3
 
 

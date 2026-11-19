@@ -15,12 +15,14 @@ python -B scripts/replay.py prepare verification-run
 ## B. 独立复核和揭晓
 
 1. 只把 `verification-run/review-packet.json` 发给另一位研究者。不要先看或转交 [参考裁决](examples/reference-review.json)。让对方根据边表或事件流手算一项关键读数，再核对报告。没有人手时可用干净模型会话试跑，并记录模型和是否用工具；不能代替独立的人类验证。
-2. 复核者按下方格式交回 JSON，四个 case 都要填。判定取 `direct`（直接支持限定主张）、`proxy_only`（仅有相关或较弱证据）、`insufficient`（关键材料缺失）、`contradicted`（同条件下有反例）。摘要照抄该 case 的 `review_input_sha256`，不是另算。
+2. 复核者按下方格式交回 JSON，四个 case 都要填。判定取 `direct`（直接支持限定主张）、`proxy_only`（仅有相关或较弱证据）、`insufficient`（关键材料缺失）、`contradicted`（同条件下有反例）。摘要照抄该 case 的 `review_input_sha256`，不是另算。`reviewer_type`（`human`/`ai_agent`）和 `author_result_exposure`（`none`/`seen`）是自我声明，可留空或写 `unspecified`；工具不验证身份，缺字段不会被当作盲审。回放生成的材料包本就不含作者结果，但仍应据实声明。
 
 ~~~json
 {
   "case-a": {
     "reviewer": "复核者编号",
+    "reviewer_type": "human 或 ai_agent",
+    "author_result_exposure": "none 或 seen",
     "verdict": "填写实际判定",
     "evidence_location": "点出原始材料的可复算位置",
     "rival_check": "解释最强替代解释是否仍成立",

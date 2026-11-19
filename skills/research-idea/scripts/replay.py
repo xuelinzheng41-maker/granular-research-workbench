@@ -141,6 +141,7 @@ def finish(root, review_file):
         probe.require_fields(answer, case, "reviewer verdict evidence_location rival_check reason review_input_sha256")
         if answer["verdict"] not in ("direct", "proxy_only", "insufficient", "contradicted"):
             raise ValueError(f"{case}: invalid verdict")
+        provenance = probe.review_provenance(answer, case)
         folder, = root.glob(f"*-{case}")
         if probe.read_record(folder, "probe-review.json").get("verdict") or any((folder / f).exists() for f in FORMAL):
             raise ValueError(f"{case}: already reviewed; prepare a fresh replay directory")
@@ -149,12 +150,12 @@ def finish(root, review_file):
         checksum = json.loads(digest.stdout)["review_input_sha256"]
         if checksum != answer["review_input_sha256"]:
             raise ValueError(f"{case}: the review digest does not match the current material; review again")
-        prepared.append((case, folder, answer, checksum))
+        prepared.append((case, folder, answer, checksum, provenance))
     # Compare only after all reviewer decisions are supplied and validated.
     reference = json.loads((EXAMPLES / "reference-review.json").read_text(encoding="utf-8"))
-    for case, folder, answer, digest in prepared:
+    for case, folder, answer, digest, provenance in prepared:
         record = {key: answer[key] for key in ("reviewer", "verdict", "evidence_location", "rival_check", "reason")}
-        record.update(evidence_artifact="readout.json", review_input_sha256=digest)
+        record.update(evidence_artifact="readout.json", review_input_sha256=digest, **provenance)
         (folder / "probe-review.json").write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
         want = 0 if record["verdict"] == "direct" else 3
         require_code(call(root, "probe.py", "check", folder), want)
