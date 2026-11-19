@@ -19,7 +19,6 @@
   scaffold <candidate-id>   探针通过后生成正式三件套
 """
 import argparse
-import csv
 import glob
 import os
 import re
@@ -49,11 +48,15 @@ def read_card(path):
     txt = open(path, encoding="utf-8", errors="ignore").read()
     meta, body = {}, txt
     m = re.match(r"^---\s*\n(.*?)\n---\s*\n?(.*)$", txt, re.S)
-    if m and yaml:
+    if m:
+        if yaml is None:
+            raise ValueError("PyYAML 未安装，无法读取论文卡元数据；运行 python -m pip install PyYAML")
         try:
             meta = yaml.safe_load(m.group(1)) or {}
-        except Exception:
-            meta = {}
+        except yaml.YAMLError as exc:
+            raise ValueError(f"{path}: YAML 元数据无效") from exc
+        if not isinstance(meta, dict):
+            raise ValueError(f"{path}: YAML 元数据必须为映射")
         body = m.group(2)
     return meta, body, txt
 
@@ -324,7 +327,7 @@ def main():
     sub.add_parser("doctor").set_defaults(fn=cmd_doctor)
     sub.add_parser("stats").set_defaults(fn=cmd_stats)
 
-    s = sub.add_parser("gaps"); s.add_argument("--section"); s.add_argument("--limit", type=int, default=12); s.set_defaults(fn=cmd_gaps)
+    s = sub.add_parser("gaps"); s.add_argument("--section", type=str.upper, choices=("A", "B", "C")); s.add_argument("--limit", type=int, default=12); s.set_defaults(fn=cmd_gaps)
     s = sub.add_parser("search"); s.add_argument("keyword"); s.add_argument("--tier"); s.add_argument("--family"); s.add_argument("--limit", type=int, default=10); s.set_defaults(fn=cmd_search)
     s = sub.add_parser("show"); s.add_argument("name"); s.set_defaults(fn=cmd_show)
     s = sub.add_parser("anchors"); s.add_argument("topic"); s.add_argument("--n", type=int, default=5); s.add_argument("--include-secondary", action="store_true"); s.set_defaults(fn=cmd_anchors)
@@ -334,8 +337,12 @@ def main():
     s = sub.add_parser("scaffold"); s.add_argument("candidate_id"); s.set_defaults(fn=cmd_scaffold)
 
     a = p.parse_args()
-    sys.exit(a.fn(a) or 0)
+    try:
+        return a.fn(a) or 0
+    except (ValueError, OSError) as exc:
+        print(f"kb: {exc}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

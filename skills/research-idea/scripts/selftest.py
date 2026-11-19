@@ -37,14 +37,14 @@ def main():
     g = os.path.join(FIX, "gaming")
     if os.path.isdir(g):
         code, out = run([PY, grade, g])
-        checks.append(("负对照：空洞稿应判不合格", code == 1 and "不通过" in last(out), last(out)))
+        checks.append(("负对照：空洞稿应判不合格", code == 1 and "有待检查项" in last(out), last(out)))
     else:
         checks.append(("负对照 fixture 存在", False, "缺 " + g))
 
     ge = os.path.join(FIX, "gaming-external")
     if os.path.isdir(ge):
         code, out = run([PY, grade, "--external", ge])
-        checks.append(("负对照：external 空洞稿应判不合格", code == 1 and "不通过" in last(out), last(out)))
+        checks.append(("负对照：external 空洞稿应判不合格", code == 1 and "有待检查项" in last(out), last(out)))
     else:
         checks.append(("external fixture 存在", False, "缺 " + ge))
 
@@ -61,6 +61,8 @@ def main():
     else:
         print("模式：独立安装（仅包内用例，不使用项目知识库或既有提案）")
 
+    code, out = run([PY, os.path.join(SKILL, "tests", "test_audit.py")])
+    checks.append(("diagnostics: CLI and fixture regressions", code == 0, last(out) if code == 0 else out))
     code, out = run([PY, os.path.join(SKILL, "tests", "test_probe.py")])
     checks.append(("probe：工作流回归（含无库定理型）", code == 0, last(out) if code == 0 else out))
     code, out = run([PY, os.path.join(SKILL, "tests", "test_validation.py")])
@@ -90,11 +92,7 @@ def add_kb_checks(checks, grade, refute):
         if not os.path.isfile(os.path.join(d, "idea.md")) or name.startswith("val-"):
             continue
         code, out = run([PY, grade, d])
-        checks.append(("真产出通过：" + name[:26], code == 0, last(out)))
-    ve = os.path.join(IDEAS, "val-2026-11-19-tsad-budget")
-    if os.path.isdir(ve):
-        code, out = run([PY, grade, "--external", ve])
-        checks.append(("external 真产出应通过", code == 0, last(out)))
+        checks.append(("现有草案格式检查：" + name[:26], code == 0, last(out)))
 
 
 if __name__ == "__main__":

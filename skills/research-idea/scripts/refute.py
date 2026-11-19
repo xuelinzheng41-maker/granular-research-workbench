@@ -7,6 +7,7 @@ v1.7：从「同行同现」改为「否定线索锚定」——先找否定句�
 用法: refute.py "kw1" ["kw2"] [--limit=5]
 环境变量: LAB_KB（默认 /opt/lab/kb）
 """
+import argparse
 import glob
 import os
 import re
@@ -24,18 +25,18 @@ NEG_CUES = (
 
 
 def main():
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    limit = 5
-    for a in sys.argv[1:]:
-        if a.startswith("--limit"):
-            limit = int(a.split("=")[1]) if "=" in a else 5
-    if not args:
-        print(__doc__)
-        return 2
+    parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
+    parser.add_argument("keywords", nargs="+")
+    parser.add_argument("--limit", type=int, default=5)
+    args = parser.parse_args()
+    if args.limit < 1:
+        parser.error("--limit must be positive")
+    if any(not keyword.strip() for keyword in args.keywords):
+        parser.error("keywords must not be empty")
     if not os.path.isdir(CORPUS):
         print("没有 %s；先同步全文语料到 kb/86-全文语料/" % CORPUS)
         return 1
-    kws = [k.lower() for k in args]
+    kws = [k.strip().lower() for k in args.keywords]
     total = 0
     for p in sorted(glob.glob(os.path.join(CORPUS, "*.txt"))):
         txt = open(p, encoding="utf-8", errors="ignore").read()
@@ -57,7 +58,7 @@ def main():
             hits.append((i + 1, kind, re.sub(r"\s+", " ", ln.strip())[:200]))
         if hits:
             print("### %s   命中 %d 处" % (os.path.basename(p), len(hits)))
-            for no, kind, text in hits[:limit]:
+            for no, kind, text in hits[:args.limit]:
                 print("  L%d [%s]: %s" % (no, kind, text))
             total += len(hits)
     if total == 0:

@@ -45,7 +45,7 @@ python -B skills/research-idea/scripts/refute.py "refinement" "lower approximati
 | --- | --- | --- |
 | 宇宙 {0,1,2}；目标 {0,1} | {{0,1},{1,2}} → {{0},{1,2}} | {0,1} → {0} |
 
-这一个反例足以反驳覆盖情形的全称主张。运行器另检查三点宇宙上的 **96 项划分细化情形**；划分情形的[一般证明思路](workbench/domain/definitions.md#数学线有限清晰覆盖)不依赖这 96 项枚举。
+这一个反例足以反驳覆盖情形的全称主张。运行器另检查三点宇宙上的 **96 次检查（12 组细化对 × 8 个目标集）**；划分情形的[一般证明思路](workbench/domain/definitions.md#数学线有限清晰覆盖)不依赖这 96 项枚举。
 
 ~~~bash
 python -B workbench/workbench.py math workbench/runs/covering-refinement
@@ -87,4 +87,4 @@ python -B skills/research-idea/scripts/replay.py prepare verification-run
 python -B skills/research-idea/scripts/replay.py finish verification-run verdicts.json
 ~~~
 
-**当前验证：** 无库自测 5/5；两条工作台案例均生成并复算一致。四个合成案例的隔离模型盲审为 4/4，与参考裁决一致。这验证的是流程和复核样例，不代表真实选题成功率已有提升。带新题做对照可直接用[验证记录模板](skills/research-idea/templates/validation-trial.md)；细节见[工作台指南](workbench/README.md)和[独立验收指南](skills/research-idea/VALIDATION.zh.md)。
+**当前验证：** 无库技能自测和工作台回归分别运行。两条工作台案例可生成并复算，另有四个合成案例用于检验复核回放；裁决与参考一致不证明独立盲审。这验证的是流程和复核样例，不代表真实选题成功率已有提升。带新题做对照可直接用[验证记录模板](skills/research-idea/templates/validation-trial.md)；细节见[工作台指南](workbench/README.md)和[独立验收指南](skills/research-idea/VALIDATION.zh.md)。

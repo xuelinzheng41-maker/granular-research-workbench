@@ -56,6 +56,10 @@ def read_result(folder):
     status = result.get("status")
     if status not in ("advance", "refuted", "inconclusive"):
         raise ProbeError(f"{name}: status must be advance, refuted or inconclusive")
+    if "submitted_for_review" in result and type(result["submitted_for_review"]) is not bool:
+        raise ProbeError(f"{name}: submitted_for_review must be a boolean")
+    if status == "advance" and not submitted(result):
+        raise ProbeError(f"{name}: an advance recommendation must be submitted for review")
     items = result.get("artifacts")
     if not isinstance(items, list) or not items:
         raise ProbeError(f"{name}: list at least one local evidence artifact")
@@ -89,9 +93,14 @@ def review_input(plan, result, artifacts):
                 plan=plan, author_result=result)
 
 
+def submitted(result):
+    # Legacy records used advance to mean both recommendation and submission.
+    return result.get("submitted_for_review", result["status"] == "advance")
+
+
 def check_result(folder):
     folder, plan, result, artifacts = read_result(folder)
-    if result["status"] != "advance":
+    if not submitted(result):
         return result["status"]
     packet = review_input(plan, result, artifacts)
     name = "probe-review.json"
@@ -107,7 +116,10 @@ def check_result(folder):
                 "insufficient": "inconclusive", "contradicted": "refuted"}
     if review["verdict"] not in statuses:
         raise ProbeError(f"{name}: verdict must be direct, proxy_only, insufficient or contradicted")
-    return statuses[review["verdict"]]
+    verdict = statuses[review["verdict"]]
+    if verdict == "advance" and result["status"] != "advance":
+        raise ProbeError(f"{name}: reviewer supports the claim but author did not; reconcile and review again")
+    return verdict
 
 
 def main():
@@ -122,8 +134,8 @@ def main():
             return 0
         if args.mode == "review-input":
             _, plan, result, artifacts = read_result(args.folder)
-            if result["status"] != "advance":
-                raise ProbeError("review-input: expected an author proposal with status advance")
+            if not submitted(result):
+                raise ProbeError("review-input: result has not been submitted for review")
             print(json.dumps(review_input(plan, result, artifacts), ensure_ascii=False, indent=2))
             return 0
         status = check_result(args.folder)

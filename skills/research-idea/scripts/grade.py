@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
-"""按 rubric.md 给 ideas/<dir>/ 打分（14 分制）。
-
-v1.9：新增「自我声明空洞」检测、数字密度要求；修正 --external 模式的两处误判；
-      新增 --verify-refs 联网核验 arXiv 号是否存在。
-用法: grade.py [--external] [--verify-refs] <dir>
-"""
-import glob
+"""诊断提案文档的格式线索；不核验科学证据，也不决定是否推进。"""
+import argparse
 import os
 import re
 import sys
@@ -36,23 +31,33 @@ def gap_ids():
 
 
 def verify_arxiv(ids):
+    import urllib.parse
     import urllib.request
-    bad = []
-    for i in ids:
+    import xml.etree.ElementTree as xml
+
+    if not ids:
+        return []
+    query = urllib.parse.urlencode({"id_list": ",".join(ids)})
+    ns = {"atom": "http://www.w3.org/2005/Atom"}
+    with urllib.request.urlopen("https://export.arxiv.org/api/query?" + query, timeout=20) as response:
         try:
-            body = urllib.request.urlopen(
-                "http://export.arxiv.org/api/query?id_list=" + i, timeout=20
-            ).read().decode("utf-8", "ignore")
-            if "<entry>" not in body:
-                bad.append(i)
-        except Exception:
-            bad.append(i)
-    return bad
+            root = xml.fromstring(response.read())
+        except xml.ParseError as exc:
+            raise ValueError("invalid Atom response") from exc
+    if root.tag != "{" + ns["atom"] + "}feed":
+        raise ValueError("expected arXiv Atom feed")
+    found = set()
+    for entry in root.findall("atom:entry", ns):
+        identifier = entry.findtext("atom:id", default="", namespaces=ns)
+        match = re.fullmatch(r"https?://arxiv\.org/abs/(\d{4}\.\d{4,5})(?:v\d+)?", identifier)
+        if match:
+            found.add(match.group(1))
+    return [i for i in ids if i not in found]
 
 
 def score_dir(d, external=False):
     idea, anchors, review = read(d, "idea.md"), read(d, "anchors.md"), read(d, "review.md")
-    allt = idea + anchors + review
+    allt = "\n".join((idea, anchors, review))
     rows = []
 
     def add(name, pts, note):
@@ -82,7 +87,7 @@ def score_dir(d, external=False):
     # 2 引用
     if external:
         p2 = 2 if (n_ext >= 3 and detail >= 3) else (1 if n_ext else 0)
-        add("2 断言有来源", p2, "外部标识 %d，页码表号 %d" % (n_ext, detail))
+        add("2 引用线索", p2, "外部标识 %d，页码表号 %d" % (n_ext, detail))
     else:
         if fake:
             p2 = 0
@@ -92,12 +97,12 @@ def score_dir(d, external=False):
             p2 = 1
         else:
             p2 = 0
-        add("2 断言有来源", p2, "真实引用 %d / 虚构 %d，页码表号 %d" % (len(real), len(fake), detail))
+        add("2 引用线索", p2, "本地可定位 %d / 未定位 %d，页码表号 %d" % (len(real), len(fake), detail))
 
     # 3 反例检索
     did = ("refute" in allt.lower()) or ("反例检索" in allt) or ("negative result" in allt.lower())
     handled = any(k in allt for k in ("直接反例", "领域限制", "边界条件", "不可能", "阳性对照", "反例说明"))
-    add("3 反例检索", 2 if (did and handled) else (1 if did else 0), "做了" if did else "没做")
+    add("3 反例检索", 2 if (did and handled) else (1 if did else 0), "出现检索措辞，未核验执行" if did else "未见检索措辞")
 
     # 4 逻辑链（每段 ≥30 字，且全文数字 ≥5）
     segs = ["问题成因", "解决动机", "创新机制", "预期证据"]
@@ -116,9 +121,9 @@ def score_dir(d, external=False):
     pub = [p for p in PUBLIC_DS if p.lower() in idea.lower()]
     if external:
         p5 = 2 if (len(pub) >= 2 and ("对照" in idea)) else (1 if pub else 0)
-        add("5 证据可执行", p5, "公开数据集 %d 个：%s" % (len(pub), ",".join(pub[:3])))
+        add("5 数据集线索", p5, "公开数据集 %d 个：%s" % (len(pub), ",".join(pub[:3])))
     else:
-        add("5 证据可执行", 2 if (len(okds) >= 3 and "对照" in idea) else (1 if okds else 0),
+        add("5 数据集线索", 2 if (len(okds) >= 3 and "对照" in idea) else (1 if okds else 0),
             "本地数据集 %d 个" % len(okds))
 
     # 6 对抗审查
@@ -143,13 +148,15 @@ def score_dir(d, external=False):
 
 
 def main():
-    ext_mode = "--external" in sys.argv
-    verify = "--verify-refs" in sys.argv
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    if not args:
-        print(__doc__)
-        return 2
-    d = args[0]
+    parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
+    parser.add_argument("directory")
+    parser.add_argument("--external", action="store_true")
+    parser.add_argument("--verify-refs", action="store_true")
+    args = parser.parse_args()
+    if args.verify_refs and not args.external:
+        parser.error("--verify-refs requires --external")
+    ext_mode = args.external
+    d = args.directory
     if not os.path.isdir(d):
         print("目录不存在:", d)
         return 2
@@ -162,7 +169,7 @@ def main():
         print("  %-16s %d/2   %s" % (name, pts, note))
     print("-" * 64)
     total = max(0, total - min(3, len(ph)) - 2 * nfake)
-    print("  总分 %d/14   ｜ 占位行 %d ｜ 真实引用 %d / 虚构 %d ｜ 外部标识 %d"
+    print("  格式分 %d/14   ｜ 占位行 %d ｜ 本地可定位 %d / 未定位 %d ｜ 外部标识 %d"
           % (total, len(ph), nreal, nfake, n_ext))
     gates = {r[0][0]: r[1] for r in rows}
     ok = total >= 10 and gates["3"] > 0 and gates["6"] > 0
@@ -175,14 +182,18 @@ def main():
         reason.append("占位行 %d 条" % len(ph))
     if nfake > 0 and nreal == 0:
         ok = False
-        reason.append("引用全为虚构")
-    if verify and ext_mode and n_ext:
-        bad = verify_arxiv(sorted(set(ARXIV_ID.findall(allt_of(d)))))
-        if bad:
+        reason.append("本地引用均未定位")
+    if args.verify_refs:
+        try:
+            unconfirmed = verify_arxiv(sorted(set(ARXIV_ID.findall(allt_of(d)))))
+        except (OSError, ValueError) as exc:
+            print(f"  arXiv 查询未完成（不是无效引用）：{exc}", file=sys.stderr)
+            return 2
+        if unconfirmed:
             ok = False
-            reason.append("arXiv 号无法解析：" + ",".join(bad))
-    print("  判定: %s%s" % ("通过" if ok else "不通过",
-                            ("（" + "；".join(reason) + "）") if reason else ""))
+            reason.append("arXiv 未返回对应条目：" + ",".join(unconfirmed))
+    print("  格式提示: %s%s；科研结论仍须人工复核。" % ("未触发格式警示" if ok else "有待检查项",
+                        ("（" + "；".join(reason) + "）") if reason else ""))
     return 0 if ok else 1
 
 

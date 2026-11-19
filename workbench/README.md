@@ -10,7 +10,7 @@
 
 ## 本地复跑
 
-在本目录运行。数学线用 Python 3.10+ 标准库。实验线使用本机已验证的 NumPy、scikit-learn 和其依赖；Digits 随库提供，无需下载。跨环境的数值复算请先核对运行产物里的 Python、NumPy 和 scikit-learn 版本。
+在本目录运行。数学线用 Python 3.10+ 标准库。实验线使用本机已验证的 NumPy、scikit-learn 和其依赖；Digits 随库提供，无需下载。复算会报告 Python、NumPy 和 scikit-learn 的版本差异；仅版本标签不同不阻断，数据指纹、切分、逐样本预测或其他证据不同仍失败。旧版清单不自动升级，保留原记录并使用原运行器，或在新目录重新运行。
 
 ~~~powershell
 python -B ../skills/research-idea/scripts/selftest.py
@@ -22,7 +22,7 @@ python -B workbench.py verify runs/digits-prototypes
 python -B workbench.py review-input runs/covering-refinement
 ~~~
 
-已有运行不会被覆盖。需要重跑时使用新的输出目录。每次生成探针计划、逐项证据和 SHA-256 清单。摘要可检出后续变动，不能证明记录时间或复核身份。
+已有运行不会被覆盖。需要重跑时使用新的输出目录。每次生成探针计划、逐项证据、作者结论和 SHA-256 清单。前三者进入清单，可编辑的独立复核记录不在其中。摘要可检出后续变动，不能证明记录时间或复核身份。
 
 | 路线 | 实际输出 | 当前解释 |
 | --- | --- | --- |
@@ -37,7 +37,9 @@ python -B workbench.py review-input runs/covering-refinement
 python -B workbench.py check runs/covering-refinement
 ~~~
 
-没有复核时返回 2；记录正确且驳回/暂缓返回 3；只有直接支持返回 0。为让独立复核者作出判定，运行器将兼容字段 `status=advance` 用作提交审查状态，不代表作者宣布主张成立。运行器不代填复核，也不自动写提案。
+`submitted_for_review` 仅表示送审，`status` 记录作者结论。两个示例都触发停止条件，因此写 `refuted`，但仍可送审。`check` 缺复核或作者与复核者意见冲突时返回 2；记录正确且驳回或暂缓时返回 3；只有作者建议推进且复核认为有直接证据时才返回 0。运行器不代填复核，也不自动写提案。
+
+在仓库根目录执行 `python -B -m unittest discover -s workbench/tests -v` 可运行工作台回归；未安装 scikit-learn 时跳过 Digits 测试。
 
 ## 带自己的题
 

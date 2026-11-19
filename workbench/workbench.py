@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 
 ROOT = Path(__file__).resolve().parent
 SKILL = ROOT.parent / 'skills' / 'research-idea' / 'scripts'
@@ -130,38 +131,93 @@ def call(run, script, *args):
                           env=dict(os.environ, PYTHONUTF8='1', LAB_IDEAS=str(run.parent)), check=False)
 
 
+FROZEN_FILES = ('probe-plan.json', 'evidence.json', 'probe-result.json')
+MANIFEST_VERSION = 2
+
+
+def runner_fingerprint():
+    return sha(Path(__file__).read_text(encoding='utf-8').encode('utf-8'))
+
+
+def author_result(kind, evidence):
+    if kind == 'math':
+        status = 'refuted' if not evidence['lower_monotone'] else 'inconclusive'
+        observation = ('The coarse lower contains 1 but the fine lower does not.' if status == 'refuted'
+                       else 'The tested example does not establish the universal claim.')
+        supported = ('This three-point covering is a counterexample to the stated lower inclusion.'
+                     if status == 'refuted' else 'Only the recorded finite case was checked.')
+        limitations = 'Uses the stated crisp covering operators; finite checks are not a general proof.'
+    else:
+        status = 'advance' if evidence['bound_met_on_all_splits'] else 'refuted'
+        missed = [str(row['seed']) for row in evidence['runs'] if
+                  100 * (row['point_correct'] - row['grain_correct']) > MAX_LOSS_PP * row['test_size']]
+        observation = ('Seeds exceeding the prespecified loss bound: ' + ', '.join(missed) if missed
+                       else 'All three splits satisfy the prespecified loss bound.')
+        supported = ('The loss bound fails on the listed splits.' if missed
+                     else 'The loss bound holds for the three recorded splits.')
+        limitations = 'This is a compression proxy, not a GBSK reproduction or population estimate.'
+    return dict(status=status, submitted_for_review=True, observation=observation,
+                supported_claim=supported, limitations=limitations,
+                next_step='Independently recompute and record the verdict.', artifacts=['evidence.json'])
+
+
 def run_study(kind, folder):
-    if folder.exists():
+    if folder.exists() or folder.is_symlink():
         raise ValueError('choose a new run directory; existing evidence is not overwritten')
     plan, calculate = study(kind)
-    folder.mkdir(parents=True)
-    dump(folder / 'probe-plan.json', plan)
-    if call(folder, 'probe.py', 'plan', folder).returncode != 0:
-        raise ValueError('invalid probe plan')
-    evidence = calculate()
-    dump(folder / 'evidence.json', evidence)
-    dump(folder / 'run-manifest.json', dict(study=kind, runner_sha256=sha(Path(__file__).read_bytes()),
-         files={name: sha((folder / name).read_bytes()) for name in ('probe-plan.json', 'evidence.json')}))
-    dump(folder / 'probe-result.json', dict(status='advance', observation='Evidence produced; requests independent verdict.',
-         supported_claim='Only the exact finite scope in the attached plan and evidence was evaluated.',
-         limitations='Not novelty evidence. The empirical study is a compression proxy, not GBSK reproduction.',
-         next_step='Independently recompute and record the verdict.', artifacts=['evidence.json', 'run-manifest.json']))
-    dump(folder / 'probe-review.json', dict(reviewer='', verdict='', evidence_artifact='evidence.json',
-         evidence_location='', rival_check='', reason='', review_input_sha256=''))
+    folder.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='.workbench-', dir=folder.parent) as temp:
+        staged = Path(temp) / 'run'
+        staged.mkdir()
+        dump(staged / 'probe-plan.json', plan)
+        if call(staged, 'probe.py', 'plan', staged).returncode != 0:
+            raise ValueError('invalid probe plan')
+        evidence = calculate()
+        dump(staged / 'evidence.json', evidence)
+        dump(staged / 'probe-result.json', author_result(kind, evidence))
+        dump(staged / 'run-manifest.json', dict(schema_version=MANIFEST_VERSION, study=kind,
+             runner_sha256=runner_fingerprint(),
+             files={name: sha((staged / name).read_bytes()) for name in FROZEN_FILES}))
+        dump(staged / 'probe-review.json', dict(reviewer='', verdict='', evidence_artifact='evidence.json',
+             evidence_location='', rival_check='', reason='', review_input_sha256=''))
+        if folder.exists() or folder.is_symlink():
+            raise ValueError('output path appeared during execution; existing evidence is not overwritten')
+        staged.rename(folder)
     print(f'Run saved: {folder}')
 
 
+def split_evidence(evidence):
+    return {name: value for name, value in evidence.items() if name != 'environment'}, evidence.get('environment')
+
+
 def verify(folder):
-    manifest = read(folder / 'run-manifest.json')
-    if manifest['runner_sha256'] != sha(Path(__file__).read_bytes()):
-        raise ValueError('runner version differs')
-    for name in ('probe-plan.json', 'evidence.json'):
+    manifest_path = folder / 'run-manifest.json'
+    if not manifest_path.is_file():
+        raise ValueError('run manifest missing; the run did not finish or is not a workbench run')
+    manifest = read(manifest_path)
+    if manifest.get('schema_version') != MANIFEST_VERSION:
+        raise ValueError('legacy or unsupported manifest; preserve it and rerun in a new directory for this version')
+    if manifest['runner_sha256'] != runner_fingerprint():
+        raise ValueError('runner source differs (ignoring line endings); use the source version that produced this run')
+    if set(manifest['files']) != set(FROZEN_FILES):
+        raise ValueError('manifest does not enumerate the exact frozen files')
+    for name in FROZEN_FILES:
         if manifest['files'][name] != sha((folder / name).read_bytes()):
-            raise ValueError(f'file changed: {name}')
-    plan, calculate = study(manifest['study'])
-    if read(folder / 'probe-plan.json') != plan or read(folder / 'evidence.json') != calculate():
-        raise ValueError('independent recomputation differs, including any recorded environment differences')
-    print('Recomputed evidence matches. No scientific verdict has been assigned.')
+            raise ValueError(f'frozen file changed: {name}')
+    kind = manifest['study']
+    if kind not in ('math', 'digits'):
+        raise ValueError('unknown study in manifest')
+    plan, calculate = study(kind)
+    if read(folder / 'probe-plan.json') != plan:
+        raise ValueError('recorded plan differs from the runner plan')
+    recorded, before = split_evidence(read(folder / 'evidence.json'))
+    recomputed, now = split_evidence(calculate())
+    if before != now:
+        print(f'workbench: environment differs (recorded {before}; current {now})', file=sys.stderr)
+    if recorded != recomputed:
+        raise ValueError('independent recomputation differs in scientific evidence')
+    if read(folder / 'probe-result.json') != author_result(kind, recomputed):
+        raise ValueError('author result differs from the recomputed evidence')
 
 
 def main():
@@ -169,15 +225,15 @@ def main():
     cli.add_argument('mode', choices=('math', 'digits', 'verify', 'review-input', 'check'))
     cli.add_argument('folder', type=Path)
     args = cli.parse_args()
-    folder = args.folder.resolve()
+    folder = args.folder.absolute()
     try:
         if args.mode in ('math', 'digits'):
             run_study(args.mode, folder)
         elif args.mode == 'verify':
             verify(folder)
+            print('Recomputed evidence matches. No independent scientific verdict has been assigned.')
         else:
             verify(folder)
-            sys.stdout.flush()
             return call(folder, 'probe.py', args.mode, folder).returncode
     except (ValueError, ImportError, OSError, KeyError) as exc:
         print(f'workbench: {exc}', file=sys.stderr)
