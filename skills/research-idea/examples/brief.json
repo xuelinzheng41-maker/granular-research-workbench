@@ -1,0 +1,57 @@
+{
+  "profile": {
+    "topic": "When do simple summaries discard decision-relevant information? (synthetic onboarding exercise)",
+    "minutes_this_week": 90,
+    "probe_limit_minutes": 30,
+    "skills": [
+      "discrete-math",
+      "python"
+    ],
+    "resources": [
+      "cpu",
+      "public-materials"
+    ]
+  },
+  "candidates": [
+    {
+      "id": "graph-distance",
+      "source_kind": "anomaly",
+      "source": "Edge lists and metadata in the synthetic graph exercise.",
+      "claim": "There exist connected graphs with the same degree multiset and different diameters.",
+      "prior_status": "overlap",
+      "search_trace": "Textbook graph invariants already distinguish degree sequence and diameter. This is a known-property teaching exercise, not a novelty claim.",
+      "difference": "No novelty for the bare existence claim.",
+      "risk": "An exercise may look like a research contribution when scope is omitted.",
+      "first_probe": "Compute distances on two labelled graphs.",
+      "probe_minutes": 10,
+      "advance_if": "A connected pair with equal sorted degrees has unequal diameter.",
+      "stop_if": "The proposed pair has unequal degree multisets or equal diameter.",
+      "required_skills": [
+        "discrete-math"
+      ],
+      "required_resources": [
+        "cpu"
+      ]
+    },
+    {
+      "id": "budget-dedup",
+      "source_kind": "transfer",
+      "source": "Transfer key deduplication to rate-limited synthetic event streams.",
+      "claim": "Distinct-key admission under a shared alert cap can reduce missed incidents on a fixed duplicate-heavy stream.",
+      "prior_status": "unsearched",
+      "search_trace": "Search budgeted event detection, duplicate alert suppression and incident recall; nearest work not yet verified in this example.",
+      "difference": "Compare first-budget versus first-distinct-key at an identical cap on the same stream; novelty unknown.",
+      "risk": "Repeated keys can also be independent true incidents.",
+      "first_probe": "Replay two deterministic synthetic streams.",
+      "probe_minutes": 20,
+      "advance_if": "More distinct incidents found at the same budget on the bounded stream.",
+      "stop_if": "Advantage disappears when keys are not a proxy for incident identity.",
+      "required_skills": [
+        "python"
+      ],
+      "required_resources": [
+        "cpu"
+      ]
+    }
+  ]
+}

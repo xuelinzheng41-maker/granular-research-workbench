@@ -1,0 +1,47 @@
+{
+  "budget": 3,
+  "duplicate_heavy": [
+    [
+      "red",
+      "I1"
+    ],
+    [
+      "red",
+      "I1"
+    ],
+    [
+      "red",
+      "I1"
+    ],
+    [
+      "blue",
+      "I2"
+    ],
+    [
+      "green",
+      "I3"
+    ]
+  ],
+  "shared_key": [
+    [
+      "red",
+      "I1"
+    ],
+    [
+      "red",
+      "I2"
+    ],
+    [
+      "red",
+      "I3"
+    ],
+    [
+      "blue",
+      null
+    ],
+    [
+      "green",
+      null
+    ]
+  ]
+}

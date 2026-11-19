@@ -1,0 +1,2 @@
+The claim concerns projection monotonicity under regrouping.
+There exists a counterexample for an eight-point construction.

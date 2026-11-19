@@ -1,0 +1,26 @@
+{
+  "case-a": {
+    "verdict": "direct",
+    "evidence_location": "readout.json: graphs A and B, degrees and diameter",
+    "rival_check": "Relabelling cannot change diameter; the sorted degree sequences agree but diameters are 5 and 4.",
+    "reason": "The two connected graphs are witnesses for the existential claim."
+  },
+  "case-b": {
+    "verdict": "contradicted",
+    "evidence_location": "readout.json: shared_key, hit counts",
+    "rival_check": "Three distinct incidents share red, so key deduplication suppresses two true events.",
+    "reason": "With the same cap the baseline finds 3 incidents while deduplication finds only 1."
+  },
+  "case-c": {
+    "verdict": "contradicted",
+    "evidence_location": "readout.json: graphs A and B, degrees and diameter",
+    "rival_check": "Equal degree multisets do not fix distances across vertices.",
+    "reason": "The two connected graphs have equal sorted degrees but diameters 5 and 4."
+  },
+  "case-d": {
+    "verdict": "direct",
+    "evidence_location": "readout.json: duplicate_heavy, hit counts",
+    "rival_check": "Both policies spend 3 alerts; duplicate alerts do not add new incident hits.",
+    "reason": "Deduplication finds 3 incidents and the baseline finds 1 on the specified stream."
+  }
+}
