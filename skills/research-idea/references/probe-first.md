@@ -46,7 +46,7 @@ python scripts/probe.py verify-inputs ideas/<ID>
 
 命令按文件内容生成输入清单，缺文件或文件不在候选目录内会报错。把输出中的 `inputs_sha256` 填入结果的 `frozen_inputs_sha256`；送审时同时交付输入锁清单和可读取的输入。正式运行产生的证据要与锁定输入分开。实现或输入发生变化时，`seal`、`review-input` 和 `check` 不会沿用原记录；新版本使用新候选目录。未声明 `implementation.inputs` 的旧记录保持原行为，不会被视为在运行前已锁输入。
 
-`verify-inputs` 只重新计算锁中声明的文件哈希：全部匹配时退出 0，并输出 `ok`、`plan_sha256`、`inputs_sha256` 和当前 `files`；文件变动、缺失或锁与当前声明不一致时退出 3，并在 `changed`、`missing`、`extra` 中标出差异。输入锁不存在或计划属于未声明 `implementation.inputs` 的旧记录时退出 2，提示先补齐声明并运行 `lock-inputs`；命令不会创建、修复或删除任何文件。它只核对声明文件的内容哈希，不证明某条命令实际读取了哪些文件、何时执行，也不证明运行环境或外部数据未被替换。
+`verify-inputs` 只读核对记录一致性：重新计算锁中声明的文件哈希，核对当前 `probe-plan.json` 的摘要仍等于锁中的 `plan_sha256`，并用锁的 `plan_sha256` 与 `files` 重算摘要，核对它仍等于锁自身记录的 `inputs_sha256`。全部匹配时退出 0，并输出 `ok`、`plan_sha256`、`inputs_sha256`、当前 `files`、`plan_changed: false` 和 `lock_integrity: true`；文件变动、缺失、锁与当前声明不一致、计划已变化或锁摘要不一致时退出 3，并在 `changed`、`missing`、`extra`、`plan_changed`、`lock_integrity` 中标出差异，计划变化时另含 `current_plan_sha256`。输入锁不存在或计划属于未声明 `implementation.inputs` 的旧记录时退出 2，提示先补齐声明并运行 `lock-inputs`；命令不会创建、修复或删除任何文件。它只核对记录一致性，不证明某条命令实际读取了哪些文件、何时执行、由谁执行，也不证明运行环境或外部数据未被替换。
 
 这里锁定的是声明的文件，不证明实际命令、执行时刻或文件选择。若通过候选目录内的清单引用外部数据，本工具只核对清单本身；复核还要独立核对外部数据哈希及环境。
 
