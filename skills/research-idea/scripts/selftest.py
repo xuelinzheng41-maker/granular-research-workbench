@@ -68,6 +68,9 @@ def main():
     code, out = run([PY, os.path.join(SKILL, "tests", "test_validation.py")])
     checks.append(("validation：候选比较、原始回放、旧复核拦截", code == 0, last(out) if code == 0 else out))
 
+    code, out = run([PY, os.path.join(SKILL, "tests", "test_handoff.py")])
+    checks.append(("handoff: candidate, implementation, stale review", code == 0, last(out) if code == 0 else out))
+
     print("=" * 68)
     bad = 0
     for name, ok, note in checks:

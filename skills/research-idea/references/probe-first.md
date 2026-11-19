@@ -14,7 +14,27 @@
 
 GitHub 可选：只追与问题直接相关的官方实现、可复现 issue、benchmark 或具体修复。记下 permalink/commit、复现条件和维护者结论；stars、fork、未关闭 issue 都不能证明新颖性或影响。证据需要回到实验、原文或独立复核。
 
-## 最小探针
+## 从筛选结果交接到实现
+
+按下面的顺序，从技能目录执行。以 `draft` 输出的实际目录替换 `ideas/<ID>`：
+
+~~~bash
+python scripts/shortlist.py brief.json
+python scripts/kb.py draft my-probe --brief brief.json --candidate selected-id
+# 补齐探针计划，然后锁定计划：
+python scripts/probe.py freeze ideas/<ID>
+# 按已锁定的计划执行实验或写出可检查的证明，再填写作者结果：
+python scripts/probe.py seal ideas/<ID>
+python scripts/probe.py review-input ideas/<ID>
+# 独立复核者完成检查并填写复核记录后：
+python scripts/probe.py check ideas/<ID>
+~~~
+
+`draft` 重新检查候选资格。候选 ID、主张、预算和推进/停止条件从候选比较记录继承，不在探针中另填。补齐对象、对照，以及 `implementation.path` 和 `implementation.reproduce`（命令或证明核查步骤）；冻结后再执行。将 `freeze` 输出的 `plan_sha256` 填入结果的 `frozen_plan_sha256`，并在 `artifacts` 中列出实现或证明文件，以及至少一份独立的原始证据文件。复核者按说明手工核查或自行运行，工具不会自动执行任意命令。
+
+封存后若改变主张、对照或证据，请在新目录重做交接并重新送审。清单只能检查记录一致性，不证明命令何时运行或复核者身份。候选目录包含比较记录快照；只与获准查看这些材料的人共享。旧的无绑定指令仍可用于演练和已有记录，但不能当作候选已交接的证据。
+
+## 最小探针（兼容已有记录）
 
 1. 开候选目录：
 

@@ -27,7 +27,7 @@ import sys
 import datetime
 from pathlib import Path
 
-from probe import ProbeError, check_result
+from probe import SELECTION, ProbeError, check_result, read_record, save_new, select_candidate
 
 try:
     import yaml
@@ -282,11 +282,22 @@ def cmd_draft(a):
     if not re.fullmatch(SLUG, a.slug):
         print("draft: slug 必须为 1–80 个字母/数字/连字符/下划线，且以字母或数字开头", file=sys.stderr)
         return 2
+    if (a.brief is None) != (a.candidate is None):
+        raise ValueError("draft: --brief and --candidate must be given together")
+    selection = None
+    if a.brief is not None:
+        selection, fields = select_candidate(read_record(a.brief.parent, a.brief.name), a.candidate)
+        plan = read_record(TEMPLATES, "probe-plan.json")
+        plan.update(fields, implementation=dict(path="", reproduce=""))
     out = Path(IDEAS) / f"{datetime.date.today().isoformat()}-{a.slug}"
     try:
         out.mkdir(parents=True, exist_ok=False)
         for name in ("probe-plan.json", "probe-result.json", "probe-review.json"):
-            shutil.copyfile(TEMPLATES / name, out / name)
+            if name == "probe-plan.json" and selection is not None:
+                save_new(out, SELECTION, selection)
+                save_new(out, name, plan)
+            else:
+                shutil.copyfile(TEMPLATES / name, out / name)
     except OSError as exc:
         print(f"draft: {exc}", file=sys.stderr)
         return 2
@@ -333,7 +344,11 @@ def main():
     s = sub.add_parser("anchors"); s.add_argument("topic"); s.add_argument("--n", type=int, default=5); s.add_argument("--include-secondary", action="store_true"); s.set_defaults(fn=cmd_anchors)
     s = sub.add_parser("feasibility"); s.add_argument("name"); s.set_defaults(fn=cmd_feasibility)
     sub.add_parser("falsified").set_defaults(fn=cmd_falsified)
-    s = sub.add_parser("draft"); s.add_argument("slug"); s.set_defaults(fn=cmd_draft)
+    s = sub.add_parser("draft")
+    s.add_argument("slug")
+    s.add_argument("--brief", type=Path)
+    s.add_argument("--candidate", help="eligible ID from the comparison brief")
+    s.set_defaults(fn=cmd_draft)
     s = sub.add_parser("scaffold"); s.add_argument("candidate_id"); s.set_defaults(fn=cmd_scaffold)
 
     a = p.parse_args()

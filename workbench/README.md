@@ -43,4 +43,4 @@ python -B workbench.py check runs/covering-refinement
 
 ## 带自己的题
 
-按 [研究任务模板](templates/study.md) 记录问题与预算，从 [候选输入示例](../skills/research-idea/examples/brief.json) 开始比较。另建运行目录写自己的计划和原始证据，直接用选题模块的探针命令。以上两个运行器是可复算的基准案例，不是任意数学主张或实验配置的自动求解器。开始任何确认性研究前，另行决定是否需要正式预注册。
+按 [研究任务模板](templates/study.md) 记录问题与预算，从 [候选输入示例](../skills/research-idea/examples/brief.json) 开始比较。选定候选后，走[候选交接流程](../skills/research-idea/references/probe-first.md#从筛选结果交接到实现)，锁定主张、预算和停止条件，再实现、封存和送审。以上两个运行器是可复算的基准案例，不是任意数学主张或实验配置的自动求解器。开始任何确认性研究前，另行决定是否需要正式预注册。
