@@ -34,6 +34,7 @@ def require_fields(record, name, fields):
 
 SELECTION = "candidate-selection.json"
 PLAN_LOCK = "probe-plan-lock.json"
+INPUT_LOCK = "probe-input-lock.json"
 EVIDENCE_LOCK = "probe-evidence-lock.json"
 
 
@@ -69,7 +70,7 @@ def select_candidate(brief, key):
 def is_linked(folder, plan):
     return (any(key in plan for key in ("candidate_id", "selection_sha256"))
             or any((folder / name).exists() or (folder / name).is_symlink()
-                   for name in (SELECTION, PLAN_LOCK, EVIDENCE_LOCK)))
+                   for name in (SELECTION, PLAN_LOCK, INPUT_LOCK, EVIDENCE_LOCK)))
 
 
 def check_link(folder, plan):
@@ -83,8 +84,7 @@ def check_link(folder, plan):
     if not isinstance(entry, dict):
         raise ProbeError("implementation: declare a path and a reproduction command or proof checking steps")
     require_fields(entry, "implementation", "path reproduce")
-    if local_artifact(folder.resolve(), entry["path"]) is None:
-        raise ProbeError("implementation.path must be a local, non-record file path")
+    declared_inputs(folder.resolve(), entry)
     return True
 
 
@@ -122,10 +122,54 @@ def local_artifact(folder, item):
     artifact = (folder / item).resolve()
     reserved = {name.casefold() for name in (
         "probe-plan.json", "probe-result.json", "probe-review.json",
-        "idea.md", "anchors.md", "review.md", SELECTION, PLAN_LOCK, EVIDENCE_LOCK)}
+        "idea.md", "anchors.md", "review.md", SELECTION, PLAN_LOCK, INPUT_LOCK, EVIDENCE_LOCK)}
     if not artifact.is_relative_to(folder) or ({Path(item).name.casefold(), artifact.name.casefold()} & reserved):
         return None
     return artifact
+
+
+def declared_inputs(folder, entry):
+    extra = entry.get("inputs", [])
+    if not isinstance(extra, list):
+        raise ProbeError("implementation.inputs must be a list of local file paths")
+    paths, seen = {}, set()
+    for item in [entry["path"], *extra]:
+        path = local_artifact(folder, item)
+        if path is None:
+            raise ProbeError(f"implementation: invalid local file path: {item!r}")
+        if path in seen:
+            raise ProbeError(f"implementation: duplicate input path: {item!r}")
+        paths[item] = path
+        seen.add(path)
+    return paths
+
+
+def frozen_plan_digest(folder, plan):
+    digest = record_digest(plan)
+    if read_record(folder, PLAN_LOCK).get("plan_sha256") != digest:
+        raise ProbeError("plan differs from the frozen plan; create a new draft")
+    return digest
+
+
+def input_snapshot(folder, plan, digest):
+    paths = declared_inputs(folder, plan["implementation"])
+    for name, path in paths.items():
+        if not path.is_file():
+            raise ProbeError(f"frozen input missing or not a file: {name}")
+    snapshot = dict(plan_sha256=digest, files=artifact_digests(paths))
+    return dict(snapshot, inputs_sha256=record_digest(snapshot))
+
+
+def lock_inputs(folder):
+    folder = folder.resolve()
+    plan = check_plan(folder, require_claim=True)
+    if not is_linked(folder, plan) or "inputs" not in plan["implementation"]:
+        raise ProbeError("lock-inputs requires a linked plan declaring implementation.inputs (use [] for the entry file only)")
+    if (folder / EVIDENCE_LOCK).exists():
+        raise ProbeError("run is already sealed; create a new draft to lock inputs")
+    snapshot = input_snapshot(folder, plan, frozen_plan_digest(folder, plan))
+    save_new(folder, INPUT_LOCK, snapshot)
+    return snapshot
 
 
 def read_result(folder, *, sealing=False):
@@ -151,14 +195,20 @@ def read_result(folder, *, sealing=False):
             raise ProbeError(f"{name}: missing, empty or invalid evidence artifact: {item}")
         artifacts[item] = artifact
     if is_linked(folder, plan):
-        digest = record_digest(plan)
-        if read_record(folder, PLAN_LOCK).get("plan_sha256") != digest:
-            raise ProbeError("plan differs from the frozen plan; create a new draft")
+        digest = frozen_plan_digest(folder, plan)
         if result.get("frozen_plan_sha256") != digest:
             raise ProbeError("result does not identify this frozen plan; do not reuse results from another run")
         entry = plan["implementation"]["path"]
         if entry not in artifacts or len(set(artifacts.values())) < 2:
             raise ProbeError("artifacts must include the declared implementation and a separate evidence file")
+        if "inputs" in plan["implementation"]:
+            lock = read_record(folder, INPUT_LOCK)
+            if lock != input_snapshot(folder, plan, digest):
+                raise ProbeError("frozen implementation or input changed; create a new draft")
+            if result.get("frozen_inputs_sha256") != lock["inputs_sha256"]:
+                raise ProbeError("result does not identify these frozen inputs")
+            if not (set(artifacts.values()) - set(declared_inputs(folder, plan["implementation"]).values())):
+                raise ProbeError("artifacts must include evidence separate from the frozen inputs")
         if not sealing and read_record(folder, EVIDENCE_LOCK) != evidence_lock(plan, result, artifacts):
             raise ProbeError("sealed result or artifact changed; create a new draft")
     return folder, plan, result, artifacts
@@ -285,7 +335,7 @@ def check_result(folder):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("plan", "freeze", "seal", "review-input", "check"))
+    parser.add_argument("mode", choices=("plan", "freeze", "lock-inputs", "seal", "review-input", "check"))
     parser.add_argument("folder", type=Path)
     parser.add_argument("--full", action="store_true",
                         help="with review-input: also show the author's result (explicit request)")
@@ -298,8 +348,9 @@ def main():
             check_plan(args.folder, require_claim=True)
             print("plan: ready to run (structure only)")
             return 0
-        if args.mode in ("freeze", "seal"):
-            lock = freeze_plan(args.folder) if args.mode == "freeze" else seal_run(args.folder)
+        lock_commands = {"freeze": freeze_plan, "lock-inputs": lock_inputs, "seal": seal_run}
+        if args.mode in lock_commands:
+            lock = lock_commands[args.mode](args.folder)
             print(json.dumps(lock, ensure_ascii=False, indent=2))
             return 0
         if args.mode == "review-input":

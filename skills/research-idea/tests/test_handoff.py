@@ -130,6 +130,35 @@ class CandidateHandoff(unittest.TestCase):
         self.assertIn("review again", self.expect(2, "kb.py", "scaffold", newer.name).stderr)
         self.assertFalse((newer / "idea.md").exists())
 
+    def test_formal_inputs_are_bound_before_evidence(self):
+        folder, plan = self.draft("locked-inputs")
+        plan["implementation"]["inputs"] = ["config.json"]
+        self.put(folder / "probe-plan.json", plan)
+        digest = json.loads(self.expect(0, "probe.py", "freeze", folder).stdout)["plan_sha256"]
+        missing = self.expect(2, "probe.py", "lock-inputs", folder)
+        self.assertIn("witness.py", missing.stderr)
+        self.assertFalse((folder / "probe-input-lock.json").exists())
+        (folder / "witness.py").write_text(IMPLEMENTATION, encoding="utf-8")
+        self.put(folder / "config.json", {"seed": 1})
+        lock = json.loads(self.expect(0, "probe.py", "lock-inputs", folder).stdout)
+        self.assertEqual(set(lock["files"]), {"witness.py", "config.json"})
+        self.assertEqual(lock["plan_sha256"], digest)
+        self.expect(2, "probe.py", "lock-inputs", folder)
+        result = self.implement(folder, digest)
+        self.assertIn("does not identify these frozen inputs", self.expect(2, "probe.py", "seal", folder).stderr)
+        result["frozen_inputs_sha256"] = lock["inputs_sha256"]
+        self.put(folder / "probe-result.json", dict(result, artifacts=["witness.py", "config.json"]))
+        self.assertIn("evidence separate from the frozen inputs", self.expect(2, "probe.py", "seal", folder).stderr)
+        self.put(folder / "probe-result.json", result)
+        (folder / "witness.py").write_text(IMPLEMENTATION + "# Changed before seal\n", encoding="utf-8")
+        self.assertIn("frozen implementation or input changed", self.expect(2, "probe.py", "seal", folder).stderr)
+        (folder / "witness.py").write_text(IMPLEMENTATION, encoding="utf-8")
+        self.expect(0, "probe.py", "seal", folder)
+        self.expect(0, "probe.py", "review-input", folder)
+        self.put(folder / "config.json", {"seed": 2})
+        self.assertIn("frozen implementation or input changed",
+                      self.expect(2, "probe.py", "review-input", folder).stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
