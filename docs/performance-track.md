@@ -4,7 +4,7 @@ This is the primary research direction: combine complementary mechanisms into a 
 
 ## When to use it
 
-Use performance mode when the candidate claims that a new algorithm or a component recombination improves a metric under a fixed budget. Do not use it for theorem/definition audits; those remain audit mode.
+Use performance mode when the candidate claims that a new algorithm or a component recombination improves a metric under a fixed budget. The agent chooses the components after reading the paper cards; the user supplies constraints, not a combination direction. Do not use this mode for theorem/definition audits; those remain audit mode.
 
 ## Required brief fields
 

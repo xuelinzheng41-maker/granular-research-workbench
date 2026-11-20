@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased — agent-led component discovery
+
+- Documented that the performance track's agent reads paper cards and chooses component pairs itself; the user supplies constraints, not a combination direction.
+- Added the component-recombination reference with extraction fields, compatibility filters, hybrid format, and human veto role.
+
 ## 1.1.0 — 2026-11-20
 
 - Made the performance track the primary research direction in README, SKILL.md, and docs/performance-track.md; audit mode remains available for definition and theorem checks.
