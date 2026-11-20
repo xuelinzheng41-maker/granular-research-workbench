@@ -5,6 +5,7 @@
 - Added a CI matrix for Ubuntu and Windows on Python 3.10–3.12.
 - Added a clean-clone regression test that copies only tracked files and runs the suites without local knowledge bases or prior `ideas/`.
 - Added `requirements-test.txt`, `STABILITY.md`, and `docs/contracts.md`.
+- Selected the MIT license for the workbench code. No GBSK-derived source is included; GBSK-derived code must remain a separate GPL-compatible distribution.
 - No research semantics changed in this entry.
 
 ## 0.4.2 — 2026-11-20 (staging from `auto/integration`)

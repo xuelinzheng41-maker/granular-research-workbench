@@ -28,7 +28,7 @@ A release is called stable only when all of these hold:
 ## Current gaps
 
 - The v0.4.x versions live on the `auto/integration` staging line; `main` is still v0.3.0.
-- The license has not been selected. Do not redistribute the repository until that decision is recorded.
+- The workbench code is MIT-licensed. This repository does not include GBSK source code; GBSK-derived code must be distributed separately under GPL-compatible terms.
 - The review process is evidence-oriented but does not authenticate reviewer identity, prove when a command ran, or replace human scientific judgment.
 - The workbench has been exercised on a small number of real questions. That is not evidence that it will consistently produce publishable results.
 

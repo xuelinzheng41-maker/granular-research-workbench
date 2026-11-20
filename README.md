@@ -109,4 +109,8 @@ python -B -m unittest discover -s tests -v
 
 最后一条会把已跟踪文件复制到临时目录，在无本地知识库和既有 `ideas/` 的条件下重跑；CI 矩阵见 `.github/workflows/tests.yml`。
 
+## 许可证
+
+工作台代码采用 [MIT 许可证](LICENSE)。本仓库不包含 GBSK 源码；GBSK 衍生代码应单独按 GPL 兼容方式分发。
+
 **当前验证：** 无库技能自测和工作台回归分别运行。两条工作台案例可生成并复算，另有四个合成案例用于检验复核回放；裁决与参考一致不证明独立盲审。这验证的是流程和复核样例，不代表真实选题成功率已有提升。带新题做对照可直接用[验证记录模板](skills/research-idea/templates/validation-trial.md)；细节见[工作台指南](workbench/README.md)和[独立验收指南](skills/research-idea/VALIDATION.zh.md)。
