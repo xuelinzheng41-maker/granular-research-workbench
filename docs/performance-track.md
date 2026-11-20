@@ -47,6 +47,12 @@ Before any full benchmark:
 
 Pilot results are local-substitute evidence. They do not reproduce a paper table and do not establish SOTA.
 
+Run the gate on a pilot record:
+
+    python skills/research-idea/scripts/performance_gate.py <pilot.json>
+
+Exit 0 means promising, exit 3 means weak/reject, exit 2 means malformed input. The gate checks mean gain over the best baseline, a naive-concatenation baseline, the declared threshold, and an ablation drop. It is a filter, not a full benchmark.
+
 ## Cloud handoff
 
 Cloud workers may read cards and propose one hybrid, but the host Python runner executes the pilot. A cloud pilot is a filter, not a paper result. Only a passed pilot goes to the local full experiment.

@@ -4,7 +4,8 @@
 
 - Added an optional top-level mode "performance" brief schema for hybrid/optimization candidates: two base methods, two components, integration point, expected gain, two baselines, two datasets, metrics, ablation, compute budget, and kill condition.
 - Added docs/performance-track.md and a skill reference with the pilot gate; audit mode remains the default and unchanged.
-- Added a performance brief example and regression tests. This entry does not change the review gate or release version.
+- Added a performance brief example and regression tests.
+- Added performance_gate.py: exit 0 for promising, exit 3 for weak/reject, exit 2 for malformed input; it checks best-baseline gain, naive concatenation, threshold, and ablation drop. This entry does not change the audit review gate or release version.
 
 ## 1.0.1 — 2026-11-20
 

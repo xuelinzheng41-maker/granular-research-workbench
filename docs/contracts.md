@@ -24,6 +24,7 @@ Exit code 2 means the record is malformed, incomplete, changed, or unsafe to use
 
 - `shortlist.py <brief>`: exit 0 for a valid comparison, exit 2 for an unreadable or invalid brief.
   - Optional top-level `mode: "performance"` enables the performance track. Each candidate must then include a `performance` object with at least two base methods, two components, two baselines, two datasets, one metric, one ablation, an integration point, an expected gain, a compute budget, and a kill condition. Audit mode remains the default and is unchanged.
+- `performance_gate.py <pilot>`: exit 0 for a promising pilot, exit 3 for weak/reject, exit 2 for malformed or incomplete input. It checks mean gain over the best baseline, a naive-concatenation baseline, the threshold, and an ablation drop; it is not a full benchmark.
 - `kb.py doctor|stats|gaps|search|show|anchors|feasibility|falsified`: exit 0 on success, exit 2 for a missing/unreadable knowledge base or invalid arguments.
 - `kb.py draft`: exit 0 on creation, exit 2 for an invalid slug, duplicate directory, or an ineligible/missing candidate.
 - `kb.py scaffold`: exit 0 when the probe is `advance`, exit 3 when it is not, exit 2 for malformed records or existing formal files.

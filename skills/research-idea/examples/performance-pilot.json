@@ -1,0 +1,103 @@
+{
+  "metric": "macro_f1",
+  "threshold": 0.01,
+  "min_datasets": 3,
+  "datasets": [
+    {
+      "name": "DatasetA",
+      "hybrid": [
+        0.9,
+        0.905,
+        0.895
+      ],
+      "baselines": {
+        "base_a": [
+          0.88,
+          0.885,
+          0.875
+        ],
+        "base_b": [
+          0.885,
+          0.89,
+          0.88
+        ],
+        "naive_concat": [
+          0.882,
+          0.887,
+          0.878
+        ]
+      },
+      "ablations": {
+        "remove_component": [
+          0.885,
+          0.89,
+          0.88
+        ]
+      }
+    },
+    {
+      "name": "DatasetB",
+      "hybrid": [
+        0.8,
+        0.81,
+        0.79
+      ],
+      "baselines": {
+        "base_a": [
+          0.78,
+          0.785,
+          0.775
+        ],
+        "base_b": [
+          0.785,
+          0.79,
+          0.78
+        ],
+        "naive_concat": [
+          0.782,
+          0.787,
+          0.777
+        ]
+      },
+      "ablations": {
+        "remove_component": [
+          0.785,
+          0.79,
+          0.78
+        ]
+      }
+    },
+    {
+      "name": "DatasetC",
+      "hybrid": [
+        0.7,
+        0.71,
+        0.69
+      ],
+      "baselines": {
+        "base_a": [
+          0.68,
+          0.685,
+          0.675
+        ],
+        "base_b": [
+          0.685,
+          0.69,
+          0.68
+        ],
+        "naive_concat": [
+          0.682,
+          0.687,
+          0.677
+        ]
+      },
+      "ablations": {
+        "remove_component": [
+          0.685,
+          0.69,
+          0.68
+        ]
+      }
+    }
+  ]
+}
