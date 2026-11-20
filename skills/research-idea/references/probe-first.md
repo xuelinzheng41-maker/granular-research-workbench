@@ -34,6 +34,22 @@ python scripts/probe.py check ideas/<ID>
 
 封存后若改变主张、对照或证据，请在新目录重做交接并重新送审。清单只能检查记录一致性，不证明命令何时运行或复核者身份；复核记录里的 `reviewer_type` 与 `author_result_exposure` 同样只是声明。旧记录缺少这两个字段时按 `unspecified` 显示，不当作盲审，也不阻止已有记录继续使用。候选目录包含比较记录快照；只与获准查看这些材料的人共享。
 
+## 正式复跑前锁定实现和输入
+
+要将探索版转为正式比较，在冻结计划前，在 `implementation` 中增加 `inputs`，列出候选目录内的依赖脚本、切分清单、配置或本地数据文件（实现入口自动纳入；仅锁入口时用 `[]`）。计划仍可先于代码冻结。等代码和输入准备好、正式执行前，运行：
+
+~~~bash
+python scripts/probe.py lock-inputs ideas/<ID>
+# 复核者在任何时刻均可只读重算，不改动锁或输入：
+python scripts/probe.py verify-inputs ideas/<ID>
+~~~
+
+命令按文件内容生成输入清单，缺文件或文件不在候选目录内会报错。把输出中的 `inputs_sha256` 填入结果的 `frozen_inputs_sha256`；送审时同时交付输入锁清单和可读取的输入。正式运行产生的证据要与锁定输入分开。实现或输入发生变化时，`seal`、`review-input` 和 `check` 不会沿用原记录；新版本使用新候选目录。未声明 `implementation.inputs` 的旧记录保持原行为，不会被视为在运行前已锁输入。
+
+`verify-inputs` 只读核对记录之间的一致性：重新计算锁中声明的文件哈希，并检查当前 `probe-plan.json` 的摘要是否仍等于锁中的 `plan_sha256`（`plan_changed`，变化时附 `current_plan_sha256`），以及锁自身的 `inputs_sha256` 是否等于由锁中除 `inputs_sha256` 外的全部字段重算出的摘要（`lock_integrity`）；锁的顶层字段必须恰好是 `plan_sha256`、`files` 和 `inputs_sha256`，出现任何其他字段都视为完整性失败。全部匹配时退出 0，输出 `ok`、`plan_sha256`、`inputs_sha256`、`plan_changed: false`、`lock_integrity: true` 和当前 `files`；计划或文件变动、缺失、锁与当前声明不一致、锁自身摘要不一致或锁含未知顶层字段时退出 3，并在 `changed`、`missing`、`extra` 中标出差异。输入锁不存在或计划属于未声明 `implementation.inputs` 的旧记录时退出 2，提示先补齐声明并运行 `lock-inputs`；命令不会创建、修复或删除任何文件。它核对的是记录一致性，不证明某条命令实际读取了哪些文件、何时执行，也不证明是谁运行了什么、运行环境或外部数据未被替换。
+
+这里锁定的是声明的文件，不证明实际命令、执行时刻或文件选择。若通过候选目录内的清单引用外部数据，本工具只核对清单本身；复核还要独立核对外部数据哈希及环境。
+
 ## 最小探针（兼容已有记录）
 
 1. 开候选目录：
