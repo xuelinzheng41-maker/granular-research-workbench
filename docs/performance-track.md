@@ -1,6 +1,6 @@
-# Performance track (optional mode)
+# Performance track (primary mode)
 
-This track is for candidates whose goal is a better measured result, not for finding a definitional defect. The existing audit track stays unchanged.
+This is the primary research direction: combine complementary mechanisms into a new algorithm or optimization and test whether it beats strong baselines under a fixed budget. The audit track remains available for definition/theorem checks, but it is not the main line.
 
 ## When to use it
 

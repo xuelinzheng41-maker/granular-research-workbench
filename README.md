@@ -2,14 +2,17 @@
 
 从文献和定义出发，筛出值得试的选题，用**数学证明或反例**、**可重跑的计算实验**验证，再交给另一位研究者复核。面向粗糙集、粒球及相关数学与计算机研究；当前不包含论文写作。
 
+**当前主方向：性能轨道（performance）。** 目标是把两篇论文的互补机制组合成新算法或优化算法，在固定预算下用基线、naive 拼接和消融判断是否真的更好；审计轨道保留为定义/定理核查的辅助路线。
+
 **本地可跑：** Python 3.10+。选题自测和数学示例只用标准库；Digits 示例需要 NumPy 和 scikit-learn，数据随库提供。以下命令均从仓库根目录执行。
 
-**稳定版状态：** [v1.0.1](https://github.com/xuelinzheng41-maker/granular-research-workbench/releases/tag/v1.0.1) 已发布（2026-11-20），支持 Python 3.10–3.12 的 Windows 与 Linux。发布门槛见[稳定版标准](STABILITY.md)，命令与记录格式见[公开契约](docs/contracts.md)，版本变化见[变更记录](CHANGELOG.md)。
+**版本状态：** 最新 Release 为 [v1.0.1](https://github.com/xuelinzheng41-maker/granular-research-workbench/releases/tag/v1.0.1)（2026-11-20）；当前 main 已并入性能轨道，但尚未发布新 Release。发布门槛见[稳定版标准](STABILITY.md)，命令与记录格式见[公开契约](docs/contracts.md)，版本变化见[变更记录](CHANGELOG.md)。
 
 ## 研究入口
 
 | 我想做什么 | 直接入口 | 产物或判定 |
 | --- | --- | --- |
+| 找效果更好的 hybrid / 优化算法 | [性能轨道](docs/performance-track.md) · [性能 brief 示例](skills/research-idea/examples/performance-brief.json) · [pilot gate](skills/research-idea/scripts/performance_gate.py) | 候选、基线、消融、pilot 判定 |
 | 核对粗糙集与粒球的定义和基线 | [领域定义与复现边界](workbench/domain/definitions.md) · [研究任务模板](workbench/templates/study.md) | 算子、假设、对照与证据口径 |
 | 从几条想法中挑能做的题 | [候选筛选脚本](skills/research-idea/scripts/shortlist.py) · [输入示例](skills/research-idea/examples/brief.json) | 合格候选、暂缓原因和最小验证 |
 | 查论文卡、近邻工作与反例 | [知识库工具](skills/research-idea/scripts/kb.py) · [反例检索工具](skills/research-idea/scripts/refute.py) | 文献锚点、已有反证和检索范围 |
@@ -27,6 +30,8 @@
 python -B skills/research-idea/scripts/selftest.py
 python -B skills/research-idea/scripts/shortlist.py skills/research-idea/examples/brief.json
 python -B skills/research-idea/scripts/kb.py draft my-topic
+python -B skills/research-idea/scripts/shortlist.py skills/research-idea/examples/performance-brief.json
+python -B skills/research-idea/scripts/performance_gate.py skills/research-idea/examples/performance-pilot.json
 ~~~
 
 比较示例返回空的 `eligible_ids`：图论题是已知性质的练习，事件流题尚未完成近邻检索。`draft` 会打印候选地址并创建探针记录，并不生成正式提案。

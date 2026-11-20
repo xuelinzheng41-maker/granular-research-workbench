@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — performance track
+## Unreleased — performance track (main direction)
 
 - Added an optional top-level mode "performance" brief schema for hybrid/optimization candidates: two base methods, two components, integration point, expected gain, two baselines, two datasets, metrics, ablation, compute budget, and kill condition.
 - Added docs/performance-track.md and a skill reference with the pilot gate; audit mode remains the default and unchanged.

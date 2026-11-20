@@ -9,6 +9,8 @@ description: 面向数学与计算机学生，从文献空位、反常或跨域�
 > 核心原则：**没有证据链的想法不是 Idea，是猜测。**
 > 每条断言必须能指回一张论文卡、一篇原文，或一次可复算的实验。
 
+**主方向：性能轨道。** 默认先问“组合或优化后，在固定预算下是否真的超过基线”；只有目标是定义/定理审计时才走 audit 模式。性能候选按 [性能轨道](references/performance-track.md) 执行，必须有两个基础方法、两个互补组件、强基线、naive 拼接、消融和 kill_if。
+
 ## 0. 前置检查
 
 第一次使用按 [快速上手](README.md) 配置独立工作目录，并运行 `python scripts/selftest.py`。接入现有知识库时，再运行 `python scripts/kb.py doctor` 和 `python scripts/selftest.py --with-kb`。无库时直接用可核对的原文、公开数据或数学构造。第三方复验见 [独立验收指南](VALIDATION.zh.md)。
