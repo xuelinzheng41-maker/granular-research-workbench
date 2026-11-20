@@ -23,6 +23,7 @@ Exit code 2 means the record is malformed, incomplete, changed, or unsafe to use
 ## Selection and knowledge-base CLI
 
 - `shortlist.py <brief>`: exit 0 for a valid comparison, exit 2 for an unreadable or invalid brief.
+  - Optional top-level `mode: "performance"` enables the performance track. Each candidate must then include a `performance` object with at least two base methods, two components, two baselines, two datasets, one metric, one ablation, an integration point, an expected gain, a compute budget, and a kill condition. Audit mode remains the default and is unchanged.
 - `kb.py doctor|stats|gaps|search|show|anchors|feasibility|falsified`: exit 0 on success, exit 2 for a missing/unreadable knowledge base or invalid arguments.
 - `kb.py draft`: exit 0 on creation, exit 2 for an invalid slug, duplicate directory, or an ineligible/missing candidate.
 - `kb.py scaffold`: exit 0 when the probe is `advance`, exit 3 when it is not, exit 2 for malformed records or existing formal files.

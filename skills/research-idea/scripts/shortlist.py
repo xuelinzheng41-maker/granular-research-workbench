@@ -7,6 +7,7 @@ from pathlib import Path
 
 SOURCES = {"literature", "anomaly", "transfer"}
 REVIEW_STATES = {"unsearched", "no_overlap_retrieved", "overlap", "counterexample"}
+MODES = {"audit", "performance"}
 
 
 def text(obj, key):
@@ -37,11 +38,48 @@ def object_field(obj, key):
     return value
 
 
+def performance_contract(obj):
+    contract = object_field(obj, "performance")
+    base_methods = names(contract, "base_methods")
+    if len(base_methods) < 2:
+        raise ValueError("performance.base_methods must list at least two base methods")
+    components = names(contract, "components")
+    if len(components) < 2:
+        raise ValueError("performance.components must list at least two components")
+    baselines = names(contract, "baselines")
+    if len(baselines) < 2:
+        raise ValueError("performance.baselines must list at least two baselines")
+    datasets = names(contract, "datasets")
+    if len(datasets) < 2:
+        raise ValueError("performance.datasets must list at least two datasets")
+    metrics = names(contract, "metrics")
+    if not metrics:
+        raise ValueError("performance.metrics must list at least one metric")
+    ablation = names(contract, "ablation")
+    if not ablation:
+        raise ValueError("performance.ablation must list at least one ablation")
+    return dict(
+        base_methods=sorted(base_methods),
+        components=sorted(components),
+        integration=text(contract, "integration"),
+        expected_gain=text(contract, "expected_gain"),
+        baselines=sorted(baselines),
+        datasets=sorted(datasets),
+        metrics=sorted(metrics),
+        ablation=sorted(ablation),
+        compute_budget_minutes=integer(contract, "compute_budget_minutes"),
+        kill_if=text(contract, "kill_if"),
+    )
+
+
 def compare(data):
     if not isinstance(data, dict):
         raise ValueError("top-level input must be an object")
     profile = object_field(data, "profile")
     topic = text(profile, "topic")
+    mode = data.get("mode", "audit")
+    if mode not in MODES:
+        raise ValueError(f"unknown mode: {mode}")
     available = min(integer(profile, "minutes_this_week"), integer(profile, "probe_limit_minutes"))
     skills = names(profile, "skills")
     resources = names(profile, "resources")
@@ -68,6 +106,9 @@ def compare(data):
         yes, no = text(item, "advance_if"), text(item, "stop_if")
         if yes == no:
             raise ValueError(f"{key}: advance_if must differ from stop_if")
+        contract = performance_contract(item) if "performance" in item else None
+        if mode == "performance" and contract is None:
+            raise ValueError(f"{key}: performance mode requires a performance contract")
         minutes = integer(item, "probe_minutes")
         missing_skills = sorted(names(item, "required_skills") - skills)
         missing_resources = sorted(names(item, "required_resources") - resources)
@@ -86,12 +127,14 @@ def compare(data):
                          prior_status=finding, search_trace=trace, difference=differences,
                          risk=text(item, "risk"), first_probe=text(item, "first_probe"),
                          probe_minutes=minutes, advance_if=yes, stop_if=no,
+                         performance=contract,
                          decision="hold" if reasons else "eligible_for_probe", reasons=reasons))
     if len(sources) < 2:
         raise ValueError("use at least two source kinds; do not invent one to pass the check")
-    return dict(topic=topic, time_cap_minutes=available, candidates=rows,
+    return dict(mode=mode, topic=topic, time_cap_minutes=available, candidates=rows,
                 eligible_ids=[r["id"] for r in rows if r["decision"] == "eligible_for_probe"],
-                limits="Declared constraints only; reported retrieval is not novelty or approval to scaffold.")
+                limits="Declared constraints only; reported retrieval is not novelty or approval to scaffold. "
+                       "Performance mode validates declared fields; it does not certify benchmark quality.")
 
 
 def main():

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — performance track
+
+- Added an optional top-level mode "performance" brief schema for hybrid/optimization candidates: two base methods, two components, integration point, expected gain, two baselines, two datasets, metrics, ablation, compute budget, and kill condition.
+- Added docs/performance-track.md and a skill reference with the pilot gate; audit mode remains the default and unchanged.
+- Added a performance brief example and regression tests. This entry does not change the review gate or release version.
+
 ## 1.0.1 — 2026-11-20
 
 - Fixed `selftest.py` losing child output when the parent runs under a non-UTF Windows console; it now decodes UTF-8 explicitly and pins child IO encoding.

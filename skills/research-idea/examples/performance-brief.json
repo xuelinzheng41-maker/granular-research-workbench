@@ -1,0 +1,130 @@
+{
+  "profile": {
+    "topic": "Performance track: complementary hybrid algorithms (synthetic onboarding example)",
+    "minutes_this_week": 240,
+    "probe_limit_minutes": 30,
+    "skills": [
+      "python",
+      "machine-learning"
+    ],
+    "resources": [
+      "cpu",
+      "public-materials"
+    ]
+  },
+  "mode": "performance",
+  "candidates": [
+    {
+      "id": "vp-threeway-hybrid",
+      "source_kind": "literature",
+      "source": "VPGBFRS (ASOC 2025) + 3W-GBSVM++ (ASOC 2026), component-level recombination.",
+      "claim": "Using VPGBFRS dependency weights inside a three-way reject head improves macro-F1 over both bases at equal coverage.",
+      "prior_status": "no_overlap_retrieved",
+      "search_trace": "Local snapshot only; searched component names, not a full external novelty review.",
+      "difference": "The combination changes the decision rule and feature weighting; it is not a score concatenation.",
+      "risk": "Three-way rejection can improve accuracy by lowering coverage; coverage must be fixed.",
+      "first_probe": "Pilot 3 datasets x 3 seeds, same split and budget.",
+      "probe_minutes": 30,
+      "advance_if": "At least 2/3 datasets beat both bases by >=1.0% macro-F1 at equal coverage.",
+      "stop_if": "Gain disappears at equal coverage or under remove-one ablation.",
+      "required_skills": [
+        "python",
+        "machine-learning"
+      ],
+      "required_resources": [
+        "cpu"
+      ],
+      "performance": {
+        "base_methods": [
+          "VPGBFRS",
+          "3W-GBSVM++"
+        ],
+        "components": [
+          "variable-precision fuzzy rough weighting",
+          "three-way reject threshold"
+        ],
+        "integration": "Use VPGBFRS dependency for feature weighting; calibrate the three-way threshold on out-of-fold scores.",
+        "expected_gain": ">=1.0% macro-F1 over the stronger base at equal coverage",
+        "baselines": [
+          "VPGBFRS",
+          "3W-GBSVM++",
+          "naive score concatenation"
+        ],
+        "datasets": [
+          "Waveform",
+          "DryBean",
+          "Segmentation"
+        ],
+        "metrics": [
+          "macro-F1",
+          "coverage",
+          "uncertainty rate",
+          "runtime"
+        ],
+        "ablation": [
+          "remove three-way reject",
+          "remove VPGBFRS weighting",
+          "random component control"
+        ],
+        "compute_budget_minutes": 180,
+        "kill_if": "No dataset beats both bases by 1%, or the gain vanishes under remove-one ablation."
+      }
+    },
+    {
+      "id": "ball-evidence-hybrid",
+      "source_kind": "transfer",
+      "source": "GBCRS (IJAR 2025) + EAC ball-level evidence, transferred to tabular classification.",
+      "claim": "Ball-level evidence accumulation improves stability over a single ball cover at matched purity and block count.",
+      "prior_status": "unsearched",
+      "search_trace": "Local snapshot only; searched ball cover and evidence accumulation terms.",
+      "difference": "Adds a ball-level aggregation layer; compare with a single-cover baseline and a matched random partition.",
+      "risk": "More balls can overfit; matched block count and purity are required.",
+      "first_probe": "Pilot 3 datasets x 3 seeds with matched m and purity.",
+      "probe_minutes": 25,
+      "advance_if": "At least 2/3 datasets improve mean macro-F1 with lower seed variance at matched m and purity.",
+      "stop_if": "Gain disappears at matched m/purity or under random-partition control.",
+      "required_skills": [
+        "python",
+        "machine-learning"
+      ],
+      "required_resources": [
+        "cpu"
+      ],
+      "performance": {
+        "base_methods": [
+          "GBCRS",
+          "EAC"
+        ],
+        "components": [
+          "granular-ball cover",
+          "ball-level evidence accumulation"
+        ],
+        "integration": "Replace the single-cover decision with a ball-level evidence pool; match m and purity.",
+        "expected_gain": ">=1.0% macro-F1 and lower seed variance at matched m/purity",
+        "baselines": [
+          "GBCRS single cover",
+          "EAC evidence pooling",
+          "matched random partition"
+        ],
+        "datasets": [
+          "Waveform",
+          "DryBean",
+          "Segmentation"
+        ],
+        "metrics": [
+          "macro-F1",
+          "seed variance",
+          "runtime",
+          "ball count"
+        ],
+        "ablation": [
+          "remove evidence pooling",
+          "replace balls with random blocks",
+          "matched-m control"
+        ],
+        "compute_budget_minutes": 180,
+        "kill_if": "No gain at matched m/purity, or random-partition control matches the hybrid."
+      }
+    }
+  ]
+}

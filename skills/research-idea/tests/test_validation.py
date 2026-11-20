@@ -37,6 +37,22 @@ class ShortlistTests(unittest.TestCase):
         self.assertEqual(len(result["candidates"]), 4)
         self.assertIn("extra-candidate-a", [row["id"] for row in result["candidates"]])
 
+    def test_performance_brief_requires_a_complete_contract(self):
+        source = load(ROOT / "examples/performance-brief.json")
+        result = shortlist.compare(source)
+        self.assertEqual(result["mode"], "performance")
+        self.assertEqual(len(result["candidates"]), 2)
+        self.assertEqual(result["candidates"][0]["performance"]["base_methods"],
+                         ["3W-GBSVM++", "VPGBFRS"])
+        broken = copy.deepcopy(source)
+        del broken["candidates"][0]["performance"]["baselines"]
+        with self.assertRaisesRegex(ValueError, "baselines"):
+            shortlist.compare(broken)
+        missing = copy.deepcopy(source)
+        del missing["candidates"][0]["performance"]
+        with self.assertRaisesRegex(ValueError, "performance mode requires"):
+            shortlist.compare(missing)
+
     def test_rejects_malformed_or_single_source_briefs(self):
         source = load(ROOT / "examples/brief.json")
         source["candidates"][1]["source_kind"] = source["candidates"][0]["source_kind"]
