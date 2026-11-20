@@ -39,7 +39,7 @@ class VerifyInputsIntegrity(unittest.TestCase):
 
     def run_cli(self, *args):
         return subprocess.run([sys.executable, "-B", str(SCRIPTS / "probe.py"), *map(str, args)],
-                              env=self.env, encoding="utf-8", capture_output=True, check=False)
+                              env=self.env, encoding="utf-8", errors="replace", capture_output=True, check=False)
 
     def put_record(self, name, value):
         with (self.folder / name).open("w", encoding="utf-8", newline="\n") as stream:

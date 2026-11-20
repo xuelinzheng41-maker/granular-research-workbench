@@ -79,7 +79,7 @@ def recompute(path):
 def call(root, script, *args):
     return subprocess.run([sys.executable, "-B", str(HERE / script), *map(str, args)],
                           env=dict(os.environ, LAB_IDEAS=str(root), PYTHONUTF8="1"),
-                          text=True, encoding="utf-8", capture_output=True, check=False)
+                          text=True, encoding="utf-8", errors="replace", capture_output=True, check=False)
 
 
 def require_code(result, want):

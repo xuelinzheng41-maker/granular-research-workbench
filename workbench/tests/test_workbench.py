@@ -23,7 +23,7 @@ class WorkbenchRegressions(unittest.TestCase):
 
     def cli(self, mode):
         return subprocess.run([sys.executable, "-B", str(RUNNER), mode, str(self.folder)],
-                              env=dict(os.environ, PYTHONUTF8="1"), encoding="utf-8",
+                              env=dict(os.environ, PYTHONUTF8="1"), encoding="utf-8", errors="replace",
                               capture_output=True, check=False)
 
     def load(self, name):
@@ -111,12 +111,12 @@ class WorkbenchReviewPacket(unittest.TestCase):
 
     def cli(self, mode, *args):
         return subprocess.run([sys.executable, "-B", str(RUNNER), mode, str(self.folder), *map(str, args)],
-                              env=dict(os.environ, PYTHONUTF8="1"), encoding="utf-8",
+                              env=dict(os.environ, PYTHONUTF8="1"), encoding="utf-8", errors="replace",
                               capture_output=True, check=False)
 
     def full(self):
         return subprocess.run([sys.executable, "-B", str(PROBE), "review-input", str(self.folder), "--full"],
-                              env=dict(os.environ, PYTHONUTF8="1"), encoding="utf-8",
+                              env=dict(os.environ, PYTHONUTF8="1"), encoding="utf-8", errors="replace",
                               capture_output=True, check=False)
 
     def load(self, name):

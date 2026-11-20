@@ -27,6 +27,12 @@ jobs:
         run: python -B -S skills/research-idea/scripts/selftest.py
         env:
           PYTHONUTF8: "1"
+      - name: Windows console encoding regression
+        if: runner.os == 'Windows'
+        run: python -B -S skills/research-idea/scripts/selftest.py
+        env:
+          PYTHONUTF8: "0"
+          PYTHONIOENCODING: "cp936"
       - name: Skill tests
         run: python -B -m unittest discover -s skills/research-idea/tests -v
         env:
