@@ -7,29 +7,38 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+SOURCE_PATHS = ("README.md", "LICENSE", "CHANGELOG.md", "STABILITY.md",
+                "requirements-test.txt", ".github", "docs", "skills", "workbench", "tests")
+SKIP_PARTS = {".git", "__pycache__", "runs"}
+
+
+def source_files():
+    for entry in SOURCE_PATHS:
+        path = ROOT / entry
+        if path.is_file():
+            yield path
+        elif path.is_dir():
+            for child in path.rglob("*"):
+                if child.is_file() and not (set(child.parts) & SKIP_PARTS) and child.suffix != ".pyc":
+                    yield child
 
 
 class FreshClone(unittest.TestCase):
     def run_checked(self, command, cwd, env):
-        result = subprocess.run(command, cwd=cwd, env=env, encoding="utf-8",
+        result = subprocess.run(command, cwd=cwd, env=env, encoding="utf-8", errors="replace",
                                 capture_output=True, check=False)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
-    def test_tracked_tree_runs_without_local_state(self):
-        listing = subprocess.check_output(["git", "-C", str(ROOT), "ls-files", "-z"])
+    def test_source_tree_runs_without_git_or_local_state(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             repo = root / "repo"
             repo.mkdir()
-            for raw in listing.split(b"\0"):
-                if not raw:
-                    continue
-                relative = raw.decode("utf-8")
-                source = ROOT / relative
-                target = repo / relative
+            for source in source_files():
+                target = repo / source.relative_to(ROOT)
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(source, target)
-            env = dict(os.environ, PYTHONUTF8="1",
+            env = dict(os.environ, PYTHONUTF8="1", PYTHONIOENCODING="utf-8",
                        LAB_KB=str(root / "empty-kb"), LAB_IDEAS=str(root / "ideas"))
             self.run_checked([sys.executable, "-B", "-S",
                               "skills/research-idea/scripts/selftest.py"], repo, env)

@@ -46,7 +46,7 @@ class CandidateHandoff(unittest.TestCase):
 
     def cli(self, script, *args):
         return subprocess.run([sys.executable, "-B", str(SCRIPTS / script), *map(str, args)],
-                              env=self.env, encoding="utf-8", capture_output=True, check=False)
+                              env=self.env, encoding="utf-8", errors="replace", capture_output=True, check=False)
 
     def expect(self, code, script, *args):
         result = self.cli(script, *args)

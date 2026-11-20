@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1 — 2026-11-20
+
+- Fixed `selftest.py` losing child output when the parent runs under a non-UTF Windows console; it now decodes UTF-8 explicitly and pins child IO encoding.
+- Added a Windows-only CI step that runs the self-test with `PYTHONUTF8=0` and `PYTHONIOENCODING=cp936`.
+- The fresh-clone test no longer requires `.git`; it copies the documented source paths, so a release archive can run it.
+- Documented `shortlist.py` and `kb.py` exit codes and the `seal` requirement for `review-input`.
+
 ## 1.0.0 — 2026-11-20
 
 First stable release. The CI matrix passed on `main` for Ubuntu and Windows on Python 3.10–3.12.

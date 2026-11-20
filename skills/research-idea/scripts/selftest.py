@@ -13,12 +13,17 @@ IDEAS = os.environ.get("LAB_IDEAS", "/opt/lab/ideas")
 KB = os.environ.get("LAB_KB", "/opt/lab/kb")
 PY = sys.executable
 
+for stream in (sys.stdout, sys.stderr):
+    if hasattr(stream, "reconfigure"):
+        stream.reconfigure(errors="replace")
+
+
 
 def run(cmd, env=None):
-    e = dict(os.environ, PYTHONDONTWRITEBYTECODE="1", PYTHONUTF8="1")
+    e = dict(os.environ, PYTHONDONTWRITEBYTECODE="1", PYTHONUTF8="1", PYTHONIOENCODING="utf-8")
     if env:
         e.update(env)
-    r = subprocess.run(cmd, capture_output=True, text=True, env=e)
+    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", env=e)
     return r.returncode, (r.stdout + r.stderr).strip()
 
 

@@ -18,6 +18,15 @@ This file describes the parts of the workbench that a stable release may not cha
 
 Exit code 2 means the record is malformed, incomplete, changed, or unsafe to use. Exit code 3 means the record is valid but the review or verification result does not support promotion. `check` also prints the self-declared reviewer provenance; it does not verify identity.
 
+`review-input` requires a sealed result; `seal` requires the frozen plan and a result that identifies the frozen inputs when inputs are declared.
+
+## Selection and knowledge-base CLI
+
+- `shortlist.py <brief>`: exit 0 for a valid comparison, exit 2 for an unreadable or invalid brief.
+- `kb.py doctor|stats|gaps|search|show|anchors|feasibility|falsified`: exit 0 on success, exit 2 for a missing/unreadable knowledge base or invalid arguments.
+- `kb.py draft`: exit 0 on creation, exit 2 for an invalid slug, duplicate directory, or an ineligible/missing candidate.
+- `kb.py scaffold`: exit 0 when the probe is `advance`, exit 3 when it is not, exit 2 for malformed records or existing formal files.
+
 `review-input --full` is the explicit full-record view. The default view withholds the author's status, supported claim, observation, limitations, and next step.
 
 ## Record files

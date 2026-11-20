@@ -12,7 +12,7 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures"
 def cli(script, *args, **env):
     return subprocess.run([sys.executable, "-B", "-S", str(SCRIPTS / script), *map(str, args)],
                           env=dict(os.environ, PYTHONUTF8="1") | env, text=True,
-                          encoding="utf-8", capture_output=True, check=False)
+                          encoding="utf-8", errors="replace", capture_output=True, check=False)
 
 
 class AuditRegressions(unittest.TestCase):

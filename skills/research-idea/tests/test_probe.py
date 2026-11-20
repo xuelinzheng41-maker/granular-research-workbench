@@ -33,7 +33,7 @@ class ProbeWorkflow(unittest.TestCase):
 
     def run_cli(self, script, *args):
         return subprocess.run([sys.executable, str(SCRIPTS / script), *map(str, args)],
-                              env=self.env, text=True, capture_output=True, check=False)
+                              env=self.env, text=True, encoding="utf-8", errors="replace", capture_output=True, check=False)
 
     def record(self, name, value):
         (self.folder / name).write_text(json.dumps(value), encoding="utf-8")
@@ -169,7 +169,7 @@ class ReviewPacketViews(unittest.TestCase):
 
     def run_cli(self, script, *args):
         return subprocess.run([sys.executable, str(SCRIPTS / script), *map(str, args)],
-                              env=self.env, text=True, capture_output=True, check=False)
+                              env=self.env, text=True, encoding="utf-8", errors="replace", capture_output=True, check=False)
 
     def record(self, name, value):
         (self.folder / name).write_text(json.dumps(value), encoding="utf-8")

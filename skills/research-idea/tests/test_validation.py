@@ -40,7 +40,7 @@ class ShortlistTests(unittest.TestCase):
 class ReplayTests(unittest.TestCase):
     def cli(self, *args):
         return subprocess.run([sys.executable, "-B", "-S", str(ROOT / "scripts/replay.py"), *map(str, args)],
-                              text=True, encoding="utf-8", capture_output=True, check=False)
+                              text=True, encoding="utf-8", errors="replace", capture_output=True, check=False)
 
     def test_reference_replay_and_stale_review_rejection(self):
         with tempfile.TemporaryDirectory() as tmp:
