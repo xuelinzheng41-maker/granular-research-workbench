@@ -16,6 +16,7 @@ Set top-level `mode` to `performance`. Every candidate needs a `performance` obj
 - `rejected_pairs`: required list of at least two rejected combinations, each with a reason
 - `anchors`: required list of at least two anchor objects, each with a source and why it supports the claim
 - `refutation`: required object with a non-empty queries list and a non-empty coverage boundary
+- `pre_registration`: required object binding datasets, seeds, threshold, stage, and split before results
 - `integration`: where and how the components interact
 - `expected_gain`: a numeric target, not `better`
 - `baselines`: at least two, including the stronger base and a naive concatenation
@@ -53,7 +54,19 @@ The JSON example is [`performance-brief.json`](../skills/research-idea/examples/
 
 Both fields record what was checked and its boundary. The validator does not run the search or prove that the cited sources exist. A `search_trace` string alone is not accepted as anchor or refutation evidence.
 
-The two candidates in [`performance-brief.json`](../skills/research-idea/examples/performance-brief.json) each carry two component sources, three rejected pairs, two anchors, and a refutation record. Validate the example with:
+### `pre_registration` (required)
+
+`pre_registration` binds the planned comparison before results exist. It is an object with:
+
+- `datasets`: at least two non-empty dataset names
+- `seeds`: at least three unique non-negative integers
+- `threshold`: a positive number
+- `stage`: `pilot` or `full`
+- `split`: a non-blank split and evaluation policy
+
+A missing block, fewer than two datasets, fewer than three unique seeds, a non-positive threshold, an unknown stage, or a blank split is an error. The validator checks this block's form and repeats the normalized values in the brief output. It does not compare them with `performance.datasets`, a manifest, or a pilot record, and it does not infer that a run used the declared seeds or split. The manifest binds the data files; the gate binds the observed results.
+
+The two candidates in [`performance-brief.json`](../skills/research-idea/examples/performance-brief.json) each carry two component sources, three rejected pairs, two anchors, a refutation record, and a pre-registration block. Validate the example with:
 
     python -B skills/research-idea/scripts/shortlist.py skills/research-idea/examples/performance-brief.json
 
@@ -181,7 +194,7 @@ The example is [`performance-manifest.json`](../skills/research-idea/examples/pe
 
 Run from the repository root with Python 3.10+. The first ten minutes are record editing; a 3-dataset x 3-seed pilot fits in the remaining twenty.
 
-1. Minutes 0-5, brief: copy the example, fill the two components and `component_sources` (one non-empty source per component), list at least two `rejected_pairs` with reasons, add at least two `anchors` and a `refutation` with queries and coverage, and keep naive concatenation among the baselines.
+1. Minutes 0-5, brief: copy the example, fill the two components and `component_sources` (one non-empty source per component), list at least two `rejected_pairs` with reasons, add at least two `anchors` and a `refutation` with queries and coverage, pre-register at least two datasets, three unique seeds, a positive threshold, a stage, and a split, and keep naive concatenation among the baselines.
 
        cp skills/research-idea/examples/performance-brief.json my-brief.json
        python -B skills/research-idea/scripts/shortlist.py my-brief.json

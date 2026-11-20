@@ -16,6 +16,7 @@ Set top-level `mode` to `performance`. Every candidate needs a `performance` obj
 - `rejected_pairs`: required list of at least two rejected combinations with reasons (see below)
 - `anchors`: required list of at least two anchor objects, each with `source` and `why` (see below)
 - `refutation`: required object with a non-empty `queries` list and non-empty `coverage` (see below)
+- `pre_registration`: required object binding datasets, seeds, threshold, stage, and split (see below)
 - `integration`: where and how the components interact
 - `expected_gain`: a numeric target, not `better`
 - `baselines`: at least two, including the stronger base and a naive concatenation
@@ -56,7 +57,13 @@ The example maps each component to the paper and the specific mechanism that was
 
 `refutation` is an object with a non-empty `queries` list and a non-blank `coverage` string. `queries` records the mechanism keywords used with the refutation search, and `coverage` states which corpus, cards, or indexes were searched and what was not. A missing object, empty query list, or blank coverage is an error. Presence and form are checked; the search itself is not run, and the cited sources are not verified.
 
-Both example candidates in [`examples/performance-brief.json`](../examples/performance-brief.json) carry two component sources, three rejected pairs, two anchors, and a refutation record. Validate the example with:
+### `pre_registration` (required)
+
+`pre_registration` binds the comparison before results: at least two non-empty `datasets`, at least three unique non-negative integer `seeds`, a positive `threshold`, a `stage` of `pilot` or `full`, and a non-blank `split` policy. A missing block, fewer than two datasets, fewer than three unique seeds, a non-positive threshold, an unknown stage, or a blank split is an error.
+
+The validator checks this block only and echoes the normalized values in the brief output. It does not compare the block with `performance.datasets`, a manifest, or a pilot record, does not prove that the declared seeds or split were used, and does not upgrade the evidence. The manifest binds data files and the gate binds results.
+
+Both example candidates in [`examples/performance-brief.json`](../examples/performance-brief.json) carry two component sources, three rejected pairs, two anchors, a refutation record, and a pre-registration block. Validate the example with:
 
     python -B skills/research-idea/scripts/shortlist.py skills/research-idea/examples/performance-brief.json
 
@@ -180,7 +187,7 @@ The example is [`examples/performance-manifest.json`](../examples/performance-ma
 
 Run from the repository root with Python 3.10+. The early steps are editing, not training, so a 3-dataset x 3-seed pilot fits in the remaining 20 minutes.
 
-1. Minutes 0-5, brief: copy the example and fill the components, `component_sources` (one per component), `rejected_pairs` (at least two with reasons), `anchors` (at least two with source and why), `refutation` (queries plus coverage), and baselines including naive concatenation.
+1. Minutes 0-5, brief: copy the example and fill the components, `component_sources` (one per component), `rejected_pairs` (at least two with reasons), `anchors` (at least two with source and why), `refutation` (queries plus coverage), `pre_registration` (datasets, seeds, threshold, stage, split), and baselines including naive concatenation.
 
        cp skills/research-idea/examples/performance-brief.json my-brief.json
        python -B skills/research-idea/scripts/shortlist.py my-brief.json
