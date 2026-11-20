@@ -205,6 +205,29 @@ class PerformanceGateTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "finite"):
             performance_gate.compare(source)
 
+    def test_constant_random_control_is_malformed(self):
+        source = load()
+        source["datasets"][0]["baselines"]["random_control"] = [0.1, 0.1, 0.1]
+        with self.assertRaisesRegex(ValueError, "random_control must vary"):
+            performance_gate.compare(source)
+
+    def test_missing_random_control_spec_is_malformed(self):
+        source = load()
+        del source["random_control_spec"]
+        with self.assertRaisesRegex(ValueError, "random_control_spec"):
+            performance_gate.compare(source)
+
+    def test_ci_crossing_zero_is_not_promising(self):
+        source = load()
+        first = source["datasets"][0]
+        first["hybrid"] = [0.90, 0.95, 0.85]
+        first["baselines"]["base_b"] = [0.88, 0.90, 0.89]
+        first["ablations"]["remove_component"] = [0.88, 0.90, 0.89]
+        result = performance_gate.compare(source)
+        self.assertTrue(result["rows"][0]["delta_pass"])
+        self.assertLess(result["rows"][0]["delta_ci95"][0], 0.0)
+        self.assertNotEqual(result["verdict"], "promising")
+
     def test_cli_exit_codes(self):
         with tempfile.TemporaryDirectory() as tmp:
             promising = run_cli(load(), tmp)

@@ -112,6 +112,18 @@ def parse_constraints(data):
     return out
 
 
+def control_spec(data):
+    raw = data.get("random_control_spec")
+    if not isinstance(raw, dict):
+        raise ValueError("random_control_spec must be an object")
+    method = text(raw, "method", "random_control_spec.method")
+    seed = raw.get("seed")
+    if type(seed) is not int or seed < 0:
+        raise ValueError("random_control_spec.seed must be a non-negative integer")
+    matched = text(raw, "matched_on", "random_control_spec.matched_on")
+    return {"method": method, "seed": seed, "matched_on": matched}
+
+
 def paired_ci95(diffs):
     """Two-sided 95% t-interval of the mean paired difference."""
     mean = statistics.fmean(diffs)
@@ -136,6 +148,7 @@ def compare(data):
     min_datasets = data.get("min_datasets", 3)
     if type(min_datasets) is not int or min_datasets < 2:
         raise ValueError("min_datasets must be an integer >= 2")
+    control = control_spec(data)
     constraints = parse_constraints(data)
     entries = data.get("datasets")
     if not isinstance(entries, list) or len(entries) < min_datasets:
@@ -163,6 +176,8 @@ def compare(data):
             vals = number_list(baselines, key, minimum, stage)
             if len(vals) != len(hybrid):
                 raise ValueError(f"{name}: baseline {key} length differs from hybrid")
+            if key == "random_control" and len(set(vals)) < 2:
+                raise ValueError(f"{name}: random_control must vary across seeds; a constant vector is not a control")
             baseline_values[key] = vals
         ablations = seed_block(ds, "ablations", 1, stage)
         ablation_values = {}
@@ -225,7 +240,8 @@ def compare(data):
     ablation_all = all(row["ablation_pass"] for row in rows)
     random_all = all(row["random_control_pass"] for row in rows)
     constraints_all = all(row["constraint_pass"] for row in rows)
-    if pass_count >= required and ablation_all and random_all and constraints_all:
+    ci_positive = all(row["delta_ci95"][0] > 0.0 for row in rows)
+    if pass_count >= required and ablation_all and random_all and constraints_all and ci_positive:
         verdict = "promising"
     elif pass_count >= required or any(row["delta"] > 0 for row in rows):
         verdict = "weak"
@@ -241,6 +257,8 @@ def compare(data):
         dataset_wins=pass_count,
         ablation_all_pass=ablation_all,
         random_control_all_pass=random_all,
+        random_control_spec=control,
+        delta_ci95_positive=ci_positive,
         constraints={
             "min_coverage": constraints.get("min_coverage"),
             "max_runtime_s": constraints.get("max_runtime_s"),

@@ -66,7 +66,7 @@ kb.py falsified                        # 是否已被证伪（有 85-先前结�
 
 先问清研究者本周可用时间、每个小探针预算、实际技能和可用资源。参考 [候选输入示例](examples/brief.json) 比较至少两条候选（不设上限），覆盖文献空位、反常、跨域迁移中的至少两类。每条候选写一句可反驳主张、最近工作及实际差异、最大风险和可执行的最小验证。不足两种可靠来源时，记录缺口并暂停比较，不编造来源。
 
-如果目标是“新算法/组合优化后效果更好”，不要把审计 gap 当主线；改用 [性能轨道](references/performance-track.md) 和 [性能 brief 示例](examples/performance-brief.json)。每条候选必须写清两个基础方法、两个互补组件、集成点、预期增益、至少两个基线、数据集、指标、消融和 kill_if；先做 3 数据集 × 3 seeds 的 pilot，过门才进完整实验。性能轨道只验证声明字段，不证明增益真实。
+如果目标是“新算法/组合优化后效果更好”，不要把审计 gap 当主线；改用 [性能轨道](references/performance-track.md) 和 [性能 brief 示例](examples/performance-brief.json)。每条候选必须写清两个基础方法、两个互补组件、每个组件的 component_sources、至少两个 rejected_pairs、集成点、预期增益、至少两个基线（含 naive_concat 和 random_control）、数据集、指标、消融和 kill_if；pilot 必须有 stage、random_control_spec、随机对照和 coverage/runtime 约束，先做 3 数据集 × 3 seeds，过门才进完整实验。性能轨道只验证声明字段，不证明增益真实。
 
 运行 `python scripts/shortlist.py <比较记录.json>` 检查资源和记录。未核实文献、已有反例或明显超预算的候选应暂缓；都不合格时不推荐。`no_overlap_retrieved` 只表示在已记录的检索范围内未找到直接重合，不证明新颖。只有研究者选定可做的候选，才创建探针。GitHub 只作为可复核实现或失败案例的来源。
 

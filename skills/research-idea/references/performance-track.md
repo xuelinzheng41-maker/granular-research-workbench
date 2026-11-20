@@ -1,4 +1,4 @@
-# Performance track (optional mode)
+# Performance track (primary mode)
 
 This track is for candidates whose goal is a better measured result, not for finding a definitional defect. The existing audit track stays unchanged.
 

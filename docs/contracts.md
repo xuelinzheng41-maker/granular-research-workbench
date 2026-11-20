@@ -23,8 +23,10 @@ Exit code 2 means the record is malformed, incomplete, changed, or unsafe to use
 ## Selection and knowledge-base CLI
 
 - `shortlist.py <brief>`: exit 0 for a valid comparison, exit 2 for an unreadable or invalid brief.
-  - Optional top-level `mode: "performance"` enables the performance track. Each candidate must then include a `performance` object with at least two base methods, two components, two baselines, two datasets, one metric, one ablation, an integration point, an expected gain, a compute budget, and a kill condition. Audit mode remains the default and is unchanged.
-- `performance_gate.py <pilot>`: exit 0 for a promising pilot, exit 3 for weak/reject, exit 2 for malformed or incomplete input. It checks mean gain over the best baseline, a naive-concatenation baseline, the threshold, and an ablation drop; it is not a full benchmark.
+  - Optional top-level `mode: "performance"` enables the performance track. Each candidate must then include a `performance` object with at least two base methods, two components, component_sources for every component, at least two rejected_pairs with reasons, two baselines, two datasets, one metric, one ablation, an integration point, an expected gain, a compute budget, and a kill condition.
+  - A `performance` block is validated whenever present, even in audit mode; audit mode is the default and old briefs remain valid.
+- `performance_gate.py <pilot>`: exit 0 for promising, exit 3 for weak/reject, exit 2 for malformed input. It requires stage pilot or full (3 or 5 seeds), naive_concat and random_control baselines, random_control_spec, a remove-one ablation drop, and optional coverage/runtime constraints; promising also requires the paired 95% interval to stay above zero and random_control not to beat the hybrid.
+- `performance_manifest.py <manifest>`: exit 0 for a valid data/split/pilot manifest, exit 2 for malformed input. With --check-files it also verifies declared paths against SHA-256.
 - `kb.py doctor|stats|gaps|search|show|anchors|feasibility|falsified`: exit 0 on success, exit 2 for a missing/unreadable knowledge base or invalid arguments.
 - `kb.py draft`: exit 0 on creation, exit 2 for an invalid slug, duplicate directory, or an ineligible/missing candidate.
 - `kb.py scaffold`: exit 0 when the probe is `advance`, exit 3 when it is not, exit 2 for malformed records or existing formal files.

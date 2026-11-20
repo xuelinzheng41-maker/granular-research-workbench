@@ -7,6 +7,11 @@
     "min_coverage": 0.9,
     "max_runtime_s": 600
   },
+  "random_control_spec": {
+    "method": "shuffle labels within each training fold",
+    "seed": 20261121,
+    "matched_on": "same split, seeds, and budget"
+  },
   "datasets": [
     {
       "name": "DatasetA",

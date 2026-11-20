@@ -88,13 +88,15 @@ Per dataset:
 
 All seed lists (hybrid, every baseline, every ablation) must share one length and meet the stage minimum. Each row reports `hybrid_sd` and `delta_ci95`, the two-sided 95% paired t-interval of hybrid minus the best baseline.
 
+The top-level random_control_spec is required: method, seed, and matched_on. random_control must be a data-independent shuffle or random-partition control with a fixed seed; a constant vector is rejected. The gate checks form and seed variation, not whether the control is scientifically meaningful.
+
 Verdict:
 
 - `promising`: at least ceil(2 * n_datasets / 3) datasets have mean delta >= threshold; every ablation drops the hybrid mean by at least threshold; every `random_control` margin is >= 0; every coverage/runtime constraint passes.
 - `weak`: the dataset-win rule passes or any dataset has a positive delta, but at least one promising condition fails.
 - `reject`: no dataset has a positive delta over its best baseline.
 
-Exit 0 means promising, exit 3 means weak/reject, exit 2 means malformed input. `delta_ci95_excludes_zero` is reported for review but is not a pass condition. The gate is a filter, not a full benchmark: it does not validate the underlying numbers, a held-out test, or SOTA.
+Exit 0 means promising, exit 3 means weak/reject, exit 2 means malformed input. `delta_ci95_excludes_zero` is reported for review and a crossed interval is weak, not promising. The gate is a filter, not a full benchmark: it does not validate the underlying numbers, a held-out test, or SOTA.
 
 Pilot records written before this schema lack `stage` or `random_control` and now exit 2. Add `stage`, a `random_control` baseline, and `coverage`/`runtime_s` when constraints are declared; [`performance-pilot.json`](../skills/research-idea/examples/performance-pilot.json) is the template.
 
