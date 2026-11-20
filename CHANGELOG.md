@@ -4,6 +4,10 @@
 
 - Documented that the performance track's agent reads paper cards and chooses component pairs itself; the user supplies constraints, not a combination direction.
 - Added the component-recombination reference with extraction fields, compatibility filters, hybrid format, and human veto role.
+- Performance briefs now require `component_sources` (one non-empty source per declared component; undeclared names are rejected as typos) and `rejected_pairs` (at least two pairs, each with a reason; duplicate pairs are rejected). Both example candidates carry two sources and three rejected pairs.
+- Strengthened `performance_gate.py`: top-level `stage` is required (`pilot` needs at least 3 seeds per list, `full` at least 5), `naive_concat` and `random_control` baselines are mandatory, optional `constraints` enforce dataset coverage and runtime, and each row reports `hybrid_sd` and a paired 95% `delta_ci95`. A promising verdict also requires the random control not to beat the hybrid and every constraint to pass; exit codes remain 0/3/2.
+- Added `performance_manifest.py`: validates data provenance (`path`/`sha256`/`rows`/`features`/`label`), split policy (`group_column`/`folds`/`seeds`), and the pilot contract (`stage`/`threshold`/`datasets`). Exit 0 for valid, 2 for malformed; `--check-files` binds declared paths to real SHA-256 values. Added an example manifest and 17 tests.
+- Documented the strengthened brief schema, gate rules, and manifest commands in README, `docs/performance-track.md`, `skills/research-idea/references/performance-track.md`, and the component-recombination reference, including a 30-minute quickstart.
 
 ## 1.1.0 — 2026-11-20
 

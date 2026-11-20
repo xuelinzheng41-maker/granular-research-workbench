@@ -1,0 +1,54 @@
+{
+  "manifest_version": 1,
+  "data": [
+    {
+      "name": "DatasetA",
+      "path": "data/raw/dataset_a.csv",
+      "sha256": "6d84bc260b57ad5780d1e607c1249a5ce9785bcf258df3afe80519ed3339d2f2",
+      "rows": 683,
+      "features": 30,
+      "label": "diagnosis",
+      "coverage": 0.98,
+      "runtime_s": 42.5
+    },
+    {
+      "name": "DatasetB",
+      "path": "data/raw/dataset_b.csv",
+      "sha256": "c00627353658cc0b864d65b6812226c06b46e17c7b7724b92eaf74d8e8e5fa79",
+      "rows": 1200,
+      "features": 48,
+      "label": "outcome",
+      "coverage": 0.97,
+      "runtime_s": 61
+    },
+    {
+      "name": "DatasetC",
+      "path": "data/raw/dataset_c.csv",
+      "sha256": "443d4a23764a72f9102a23cb5f716f5b55d9c00e7da51881080da0cf7021dadc",
+      "rows": 2400,
+      "features": 64,
+      "label": "label",
+      "coverage": 0.96,
+      "runtime_s": 88.25
+    }
+  ],
+  "split": {
+    "group_column": "subject_id",
+    "folds": 5,
+    "seeds": [
+      13,
+      37,
+      61
+    ]
+  },
+  "pilot": {
+    "stage": "pilot",
+    "threshold": 0.01,
+    "metric": "macro_f1",
+    "datasets": [
+      "DatasetA",
+      "DatasetB",
+      "DatasetC"
+    ]
+  }
+}

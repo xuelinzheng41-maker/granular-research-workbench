@@ -53,6 +53,71 @@ class ShortlistTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "performance mode requires"):
             shortlist.compare(missing)
 
+    def test_performance_contract_records_component_sources_and_rejected_pairs(self):
+        source = load(ROOT / "examples/performance-brief.json")
+        result = shortlist.compare(source)
+        for row in result["candidates"]:
+            contract = row["performance"]
+            self.assertEqual(sorted(contract["component_sources"]), contract["components"], row["id"])
+            for name, origin in contract["component_sources"].items():
+                self.assertTrue(origin.strip(), name)
+            self.assertGreaterEqual(len(contract["rejected_pairs"]), 2, row["id"])
+            for rejected in contract["rejected_pairs"]:
+                self.assertTrue(rejected["pair"].strip() and rejected["reason"].strip(), row["id"])
+        self.assertEqual(result["candidates"][0]["performance"]["component_sources"],
+                         {"three-way reject threshold": "3W-GBSVM++ (ASOC 2026): three-way decision head "
+                                                       "with a calibrated reject band, read from the local paper snapshot.",
+                          "variable-precision fuzzy rough weighting": "VPGBFRS (ASOC 2025): variable-precision "
+                                                                    "fuzzy rough dependency weights, read from the "
+                                                                    "local paper snapshot."})
+
+    def test_performance_contract_requires_a_source_for_every_component(self):
+        source = load(ROOT / "examples/performance-brief.json")
+        missing = copy.deepcopy(source)
+        del missing["candidates"][0]["performance"]["component_sources"]
+        with self.assertRaisesRegex(ValueError, "component_sources must be an object"):
+            shortlist.compare(missing)
+        partial = copy.deepcopy(source)
+        partial["candidates"][0]["performance"]["component_sources"].pop("three-way reject threshold")
+        with self.assertRaisesRegex(ValueError, "must cover every component"):
+            shortlist.compare(partial)
+        blank = copy.deepcopy(source)
+        blank["candidates"][0]["performance"]["component_sources"]["three-way reject threshold"] = "   "
+        with self.assertRaisesRegex(ValueError, "must be a non-empty string"):
+            shortlist.compare(blank)
+        typo = copy.deepcopy(source)
+        typo["candidates"][0]["performance"]["component_sources"]["three-way reject thresold"] = "paper"
+        with self.assertRaisesRegex(ValueError, "undeclared component"):
+            shortlist.compare(typo)
+
+    def test_performance_contract_requires_two_rejected_pairs(self):
+        source = load(ROOT / "examples/performance-brief.json")
+        missing = copy.deepcopy(source)
+        del missing["candidates"][0]["performance"]["rejected_pairs"]
+        with self.assertRaisesRegex(ValueError, "rejected_pairs must be a list"):
+            shortlist.compare(missing)
+        single = copy.deepcopy(source)
+        single["candidates"][0]["performance"]["rejected_pairs"] = [
+            {"pair": "score concatenation", "reason": "no new decision rule"}]
+        with self.assertRaisesRegex(ValueError, "at least two rejected combinations"):
+            shortlist.compare(single)
+        blank_reason = copy.deepcopy(source)
+        blank_reason["candidates"][0]["performance"]["rejected_pairs"][1]["reason"] = ""
+        with self.assertRaisesRegex(ValueError, "missing or blank reason"):
+            shortlist.compare(blank_reason)
+        malformed = copy.deepcopy(source)
+        malformed["candidates"][0]["performance"]["rejected_pairs"][0] = "score concatenation"
+        with self.assertRaisesRegex(ValueError, "must be an object"):
+            shortlist.compare(malformed)
+
+    def test_audit_mode_still_ignores_the_performance_contract(self):
+        source = load(ROOT / "examples/brief.json")
+        self.assertNotIn("mode", source)
+        self.assertTrue(all("performance" not in item for item in source["candidates"]))
+        result = shortlist.compare(source)
+        self.assertEqual(result["mode"], "audit")
+        self.assertTrue(all(row["performance"] is None for row in result["candidates"]))
+
     def test_rejects_malformed_or_single_source_briefs(self):
         source = load(ROOT / "examples/brief.json")
         source["candidates"][1]["source_kind"] = source["candidates"][0]["source_kind"]

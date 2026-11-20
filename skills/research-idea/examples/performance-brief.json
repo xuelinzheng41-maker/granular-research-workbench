@@ -43,6 +43,24 @@
           "variable-precision fuzzy rough weighting",
           "three-way reject threshold"
         ],
+        "component_sources": {
+          "variable-precision fuzzy rough weighting": "VPGBFRS (ASOC 2025): variable-precision fuzzy rough dependency weights, read from the local paper snapshot.",
+          "three-way reject threshold": "3W-GBSVM++ (ASOC 2026): three-way decision head with a calibrated reject band, read from the local paper snapshot."
+        },
+        "rejected_pairs": [
+          {
+            "pair": "VPGBFRS scores concatenated with 3W-GBSVM++ scores",
+            "reason": "Concatenation only stacks two score vectors; it adds no decision rule and is already the naive baseline, so a win would not test the claim."
+          },
+          {
+            "pair": "three-way threshold calibrated on in-sample scores",
+            "reason": "In-sample calibration leaks labels and manufactures a coverage gain that cannot survive held-out evaluation."
+          },
+          {
+            "pair": "VPGBFRS weighting plus ball-level evidence aggregation",
+            "reason": "Both modules rewrite feature weights, so a remove-one ablation could not attribute the gain to either source."
+          }
+        ],
         "integration": "Use VPGBFRS dependency for feature weighting; calibrate the three-way threshold on out-of-fold scores.",
         "expected_gain": ">=1.0% macro-F1 over the stronger base at equal coverage",
         "baselines": [
@@ -98,6 +116,24 @@
         "components": [
           "granular-ball cover",
           "ball-level evidence accumulation"
+        ],
+        "component_sources": {
+          "granular-ball cover": "GBCRS (IJAR 2025): granular-ball cover construction, read from the local paper snapshot.",
+          "ball-level evidence accumulation": "EAC paper: ball-level evidence accumulation layer, read from the local paper snapshot."
+        },
+        "rejected_pairs": [
+          {
+            "pair": "single-cover decision with post-hoc score rescaling",
+            "reason": "Rescaling one cover's scores adds no second evidence source and is already covered by the matched-purity baseline."
+          },
+          {
+            "pair": "raising the ball count without matching purity",
+            "reason": "More balls raise purity mechanically; the gain would come from capacity, not from the evidence layer."
+          },
+          {
+            "pair": "random block partition promoted to a component",
+            "reason": "The random partition is a control, not a component; folding it in would hide whether ball structure matters."
+          }
         ],
         "integration": "Replace the single-cover decision with a ball-level evidence pool; match m and purity.",
         "expected_gain": ">=1.0% macro-F1 and lower seed variance at matched m/purity",

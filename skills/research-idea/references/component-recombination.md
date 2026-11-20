@@ -51,7 +51,8 @@ The agent writes one candidate, not a list of possible directions:
 - two components and the exact integration point
 - why the combination should improve a named metric
 - expected gain and the smallest useful pilot
-- at least two baselines, including naive concatenation
+- at least two baselines, including naive concatenation and a random-component control
+- a non-empty source for each component in component_sources, and at least two rejected pairs with reasons
 - datasets, metrics, compute budget
 - remove-one ablation
 - kill condition
@@ -60,7 +61,7 @@ Use the performance brief schema and the pilot gate.
 
 ## Step 4: pilot and decide
 
-Run the pilot on at least three local datasets and three seeds. A candidate is promising only when it beats the best baseline by the declared threshold on at least two thirds of datasets and the remove-one ablation drops. Otherwise archive it as weak or reject.
+Run the pilot on at least three local datasets and three seeds. A candidate is promising only when it beats the best baseline by the declared threshold on at least two thirds of datasets, the remove-one ablation drops, a random-component control does not beat the hybrid, and any declared coverage/runtime constraints hold. Otherwise archive it as weak or reject.
 
 ## Human role
 

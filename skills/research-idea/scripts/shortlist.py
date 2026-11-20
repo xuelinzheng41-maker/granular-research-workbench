@@ -38,6 +38,45 @@ def object_field(obj, key):
     return value
 
 
+def component_sources(contract, components):
+    """Map every declared component to a non-empty source; an undeclared name is a typo."""
+    raw = object_field(contract, "component_sources")
+    sources = {}
+    for key, value in raw.items():
+        if not isinstance(key, str) or not key.strip():
+            raise ValueError("component_sources keys must be non-empty component names")
+        name = key.strip()
+        if name not in components:
+            raise ValueError(f"component_sources names an undeclared component: {name}")
+        if not isinstance(value, str) or not value.strip():
+            raise ValueError(f"component_sources[{name}] must be a non-empty string")
+        sources[name] = value.strip()
+    missing = sorted(components - set(sources))
+    if missing:
+        raise ValueError("component_sources must cover every component; missing: " + ", ".join(missing))
+    return {name: sources[name] for name in sorted(sources)}
+
+
+def rejected_pairs(contract):
+    """Require at least two rejected combinations, each with a stated reason."""
+    value = contract.get("rejected_pairs")
+    if not isinstance(value, list):
+        raise ValueError("performance.rejected_pairs must be a list")
+    if len(value) < 2:
+        raise ValueError("performance.rejected_pairs must list at least two rejected combinations")
+    pairs, seen = [], set()
+    for item in value:
+        if not isinstance(item, dict):
+            raise ValueError("each rejected_pairs entry must be an object")
+        pair, reason = text(item, "pair"), text(item, "reason")
+        key = pair.casefold()
+        if key in seen:
+            raise ValueError(f"duplicate rejected pair: {pair}")
+        seen.add(key)
+        pairs.append(dict(pair=pair, reason=reason))
+    return sorted(pairs, key=lambda row: row["pair"].casefold())
+
+
 def performance_contract(obj):
     contract = object_field(obj, "performance")
     base_methods = names(contract, "base_methods")
@@ -46,6 +85,8 @@ def performance_contract(obj):
     components = names(contract, "components")
     if len(components) < 2:
         raise ValueError("performance.components must list at least two components")
+    sources = component_sources(contract, components)
+    pairs = rejected_pairs(contract)
     baselines = names(contract, "baselines")
     if len(baselines) < 2:
         raise ValueError("performance.baselines must list at least two baselines")
@@ -61,6 +102,8 @@ def performance_contract(obj):
     return dict(
         base_methods=sorted(base_methods),
         components=sorted(components),
+        component_sources=sources,
+        rejected_pairs=pairs,
         integration=text(contract, "integration"),
         expected_gain=text(contract, "expected_gain"),
         baselines=sorted(baselines),

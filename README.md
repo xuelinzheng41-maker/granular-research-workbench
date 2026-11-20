@@ -12,7 +12,7 @@
 
 | 我想做什么 | 直接入口 | 产物或判定 |
 | --- | --- | --- |
-| 找效果更好的 hybrid / 优化算法 | [性能轨道](docs/performance-track.md) · [性能 brief 示例](skills/research-idea/examples/performance-brief.json) · [pilot gate](skills/research-idea/scripts/performance_gate.py) | 候选、基线、消融、pilot 判定 |
+| 找效果更好的 hybrid / 优化算法 | [性能轨道](docs/performance-track.md) · [性能 brief 示例](skills/research-idea/examples/performance-brief.json) · [pilot gate](skills/research-idea/scripts/performance_gate.py) · [pilot manifest 校验](skills/research-idea/scripts/performance_manifest.py) | 候选、组件来源/淘汰对、manifest、pilot 判定 |
 | 核对粗糙集与粒球的定义和基线 | [领域定义与复现边界](workbench/domain/definitions.md) · [研究任务模板](workbench/templates/study.md) | 算子、假设、对照与证据口径 |
 | 从几条想法中挑能做的题 | [候选筛选脚本](skills/research-idea/scripts/shortlist.py) · [输入示例](skills/research-idea/examples/brief.json) | 合格候选、暂缓原因和最小验证 |
 | 查论文卡、近邻工作与反例 | [知识库工具](skills/research-idea/scripts/kb.py) · [反例检索工具](skills/research-idea/scripts/refute.py) | 文献锚点、已有反证和检索范围 |
@@ -32,9 +32,39 @@ python -B skills/research-idea/scripts/shortlist.py skills/research-idea/example
 python -B skills/research-idea/scripts/kb.py draft my-topic
 python -B skills/research-idea/scripts/shortlist.py skills/research-idea/examples/performance-brief.json
 python -B skills/research-idea/scripts/performance_gate.py skills/research-idea/examples/performance-pilot.json
+python -B skills/research-idea/scripts/performance_manifest.py skills/research-idea/examples/performance-manifest.json
 ~~~
 
 比较示例返回空的 `eligible_ids`：图论题是已知性质的练习，事件流题尚未完成近邻检索。`draft` 会打印候选地址并创建探针记录，并不生成正式提案。
+
+### 30 分钟性能轨道 quickstart
+
+性能记录分三件：**brief** 说明要组合什么，**manifest** 绑定数据文件与切分，**pilot 记录** 给出 gate 判定。这些命令只读本地文件，不需要云端。
+
+1. **0–5 分钟，brief。** 复制 `performance-brief.json`，写两个组件；`component_sources` 和 `rejected_pairs` 均为必填。`component_sources` 要为每个组件填一个非空来源，`rejected_pairs` 至少两条且每条都有 `pair` 和 `reason`。基线必须包含 naive 拼接。字段缺失、组件名拼错、来源为空或淘汰对重复，`shortlist.py` 都会直接报错。
+
+~~~bash
+cp skills/research-idea/examples/performance-brief.json my-brief.json
+python -B skills/research-idea/scripts/shortlist.py my-brief.json
+~~~
+
+2. **5–10 分钟，manifest。** 把真实数据文件的 `path`、`sha256`、`rows`、`features`、`label`，以及 `split.group_column`、`folds`、`seeds` 填进 manifest。`--check-files` 会按 manifest 所在目录解析相对路径并核对 SHA-256；示例里的路径只是占位。
+
+~~~bash
+cp skills/research-idea/examples/performance-manifest.json my-manifest.json
+python -B skills/research-idea/scripts/performance_manifest.py my-manifest.json
+python -B skills/research-idea/scripts/performance_manifest.py my-manifest.json --check-files
+~~~
+
+3. **10–25 分钟，pilot。** 3 个数据集 × 3 个种子，同一切分和预算；记录 hybrid、两个基础方法、`naive_concat`、`random_control` 和至少一个 remove-one 消融。所有种子列表长度必须一致。
+
+4. **25–30 分钟，gate。** 先跑判定；退出码 0 表示 promising，3 表示 weak/reject，2 表示格式错误。promising 还要求 random control 不优于 hybrid，且声明的 coverage/runtime 约束逐数据集通过。通过后再把 `stage` 改为 `full`、种子加到至少 5 个跑完整比较。
+
+~~~bash
+python -B skills/research-idea/scripts/performance_gate.py my-pilot.json
+~~~
+
+不要为了省时间跳过 `random_control` 或 manifest；应减少候选数量。字段细节见[性能轨道](docs/performance-track.md)。
 
 接入兼容的本地知识库后，可用下列入口。无库时用可核对的原文，记下搜索词、覆盖范围和最近工作；没找到重合不等于证明新颖。
 
