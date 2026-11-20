@@ -35,12 +35,18 @@ def require_fields(record, name, fields):
 SELECTION = "candidate-selection.json"
 PLAN_LOCK = "probe-plan-lock.json"
 INPUT_LOCK = "probe-input-lock.json"
+INPUT_LOCK_FIELDS = ("plan_sha256", "files", "inputs_sha256")
 EVIDENCE_LOCK = "probe-evidence-lock.json"
 
 
 def record_digest(record):
     payload = json.dumps(record, sort_keys=True, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def input_lock_digest(lock):
+    """Digest every lock field except inputs_sha256; valid locks use exactly INPUT_LOCK_FIELDS."""
+    return record_digest({key: value for key, value in lock.items() if key != "inputs_sha256"})
 
 
 def save_new(folder, name, record):
@@ -157,7 +163,7 @@ def input_snapshot(folder, plan, digest):
         if not path.is_file():
             raise ProbeError(f"frozen input missing or not a file: {name}")
     snapshot = dict(plan_sha256=digest, files=artifact_digests(paths))
-    return dict(snapshot, inputs_sha256=record_digest(snapshot))
+    return dict(snapshot, inputs_sha256=input_lock_digest(snapshot))
 
 
 def lock_inputs(folder):
@@ -211,8 +217,8 @@ def verify_inputs(folder):
                      if name in files and digest != files[name])
     current_plan_sha256 = record_digest(plan)
     plan_changed = current_plan_sha256 != lock["plan_sha256"]
-    lock_integrity = (record_digest(dict(plan_sha256=lock["plan_sha256"], files=locked))
-                      == lock["inputs_sha256"])
+    lock_integrity = (set(lock) == set(INPUT_LOCK_FIELDS)
+                      and input_lock_digest(lock) == lock["inputs_sha256"])
     report = dict(ok=not (changed or missing or set(paths) != set(locked)
                           or plan_changed or not lock_integrity),
                   plan_sha256=lock["plan_sha256"], inputs_sha256=lock["inputs_sha256"], files=files,
