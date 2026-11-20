@@ -14,6 +14,8 @@ For each candidate paper, write one row:
 
 | field | meaning |
 |---|---|
+| id | stable name used by the compatibility matrix |
+| paper | paper or card title with year |
 | mechanism | what the method actually does, not its name |
 | input | what representation it consumes |
 | output | what it produces |
@@ -21,8 +23,15 @@ For each candidate paper, write one row:
 | assumption | when it is valid |
 | cost | runtime, memory, implementation burden |
 | known failure | where it breaks or is untested |
+| source | card/paper plus line or page locator |
 
 A card without a mechanism row is only a lead, not a component.
+
+Record the rows in one JSON library and validate it before comparing pairs:
+
+    python -B skills/research-idea/scripts/component_library.py skills/research-idea/examples/component-library.json
+
+At least two components are required; ids must be unique, every field must be non-blank, and `source` must name the component's card/paper with a line/page locator. The validator checks form only, not whether the source supports the row.
 
 ## Step 2: build a compatibility matrix
 

@@ -58,6 +58,14 @@ Use two complementary components first, not a five-way stack:
 
 Components must address different bottlenecks. `Both improve accuracy` is not a reason to combine them.
 
+## Component library
+
+Keep the extracted components in one JSON record and validate it before comparing pairs:
+
+    python -B skills/research-idea/scripts/component_library.py skills/research-idea/examples/component-library.json
+
+The top-level `components` list needs at least two objects. Each object records `id`, `paper`, `mechanism`, `input`, `output`, `bottleneck`, `assumption`, `cost`, `known_failure`, and `source`; every value must be a non-blank string and ids must be unique. `source` must name the component's card or paper and include a line/page locator such as `p. 4` or `lines 12-18`. Exit 0 prints a normalized summary; exit 2 means malformed input. This checks form only: it does not verify that the source exists or that the mechanism is implemented faithfully. See [`component-library.json`](../skills/research-idea/examples/component-library.json).
+
 ## Pilot gate
 
 The brief describes what will be tested. The gate reads a separate pilot record that reports what happened:

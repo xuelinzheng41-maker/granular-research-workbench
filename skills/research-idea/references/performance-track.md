@@ -63,6 +63,14 @@ Use two complementary components first, not a five-way stack:
 
 Components must address different bottlenecks. `Both improve accuracy` is not a reason to combine them.
 
+## Component library
+
+Keep the extracted components in one read-only record and validate it:
+
+    python -B skills/research-idea/scripts/component_library.py skills/research-idea/examples/component-library.json
+
+Top-level `components` lists at least two objects. Each needs non-blank `id`, `paper`, `mechanism`, `input`, `output`, `bottleneck`, `assumption`, `cost`, `known_failure`, and `source`; ids must be unique, and `source` must name the component's card/paper plus a line/page locator. Exit 0 is valid, 2 is malformed. The validator checks form, not the cited evidence. Example: [`component-library.json`](../examples/component-library.json).
+
 ## Pilot gate
 
 The gate reads a separate pilot record. The brief says what will be tested; the pilot record reports what happened. Run:
