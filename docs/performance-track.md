@@ -76,6 +76,14 @@ Keep the extracted components in one JSON record and validate it before comparin
 
 The top-level `components` list needs at least two objects. Each object records `id`, `paper`, `mechanism`, `input`, `output`, `bottleneck`, `assumption`, `cost`, `known_failure`, and `source`; every value must be a non-blank string and ids must be unique. `source` must name the component's card or paper and include a line/page locator such as `p. 4` or `lines 12-18`. Exit 0 prints a normalized summary; exit 2 means malformed input. This checks form only: it does not verify that the source exists or that the mechanism is implemented faithfully. See [`component-library.json`](../skills/research-idea/examples/component-library.json).
 
+## Baseline registry
+
+Record every comparison arm in a read-only registry and validate it before running a pilot:
+
+    python -B skills/research-idea/scripts/baseline_registry.py skills/research-idea/examples/baseline-registry.json
+
+The top-level `baselines` list needs at least two objects. Each object records `id`, `source`, `implementation`, `budget`, `params`, and `role`; every value must be a non-blank string, ids must be unique, and `role` is `base`, `naive`, or `random`. At least one entry must be `naive` (the naive concatenation) and one must be `random` (the fixed-seed random control). `budget` and `params` are the fairness record: state them so a reviewer can check that every arm used the same split, budget, and tuning rule. Exit 0 prints a normalized summary; exit 2 means malformed input. This checks form only: it does not verify that an implementation matches its source or that run-time budgets were equal. See [`baseline-registry.json`](../skills/research-idea/examples/baseline-registry.json).
+
 ## Pilot gate
 
 The brief describes what will be tested. The gate reads a separate pilot record that reports what happened:

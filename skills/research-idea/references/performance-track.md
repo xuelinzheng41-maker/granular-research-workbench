@@ -79,6 +79,14 @@ Keep the extracted components in one read-only record and validate it:
 
 Top-level `components` lists at least two objects. Each needs non-blank `id`, `paper`, `mechanism`, `input`, `output`, `bottleneck`, `assumption`, `cost`, `known_failure`, and `source`; ids must be unique, and `source` must name the component's card/paper plus a line/page locator. Exit 0 is valid, 2 is malformed. The validator checks form, not the cited evidence. Example: [`component-library.json`](../examples/component-library.json).
 
+## Baseline registry
+
+Keep the comparison arms in one read-only record and validate it before the pilot:
+
+    python -B skills/research-idea/scripts/baseline_registry.py skills/research-idea/examples/baseline-registry.json
+
+Top-level `baselines` lists at least two objects. Each needs non-blank `id`, `source`, `implementation`, `budget`, `params`, and `role`; ids must be unique, and `role` must be `base`, `naive`, or `random`. At least one `naive` entry (the naive concatenation) and one `random` entry (the fixed-seed random control) are required. `budget` and `params` record fairness: every arm should use the same split, budget, and tuning rule. Exit 0 is valid, 2 is malformed. The validator checks form, not the cited implementation or the actual run-time budgets. Example: [`baseline-registry.json`](../examples/baseline-registry.json).
+
 ## Pilot gate
 
 The gate reads a separate pilot record. The brief says what will be tested; the pilot record reports what happened. Run:

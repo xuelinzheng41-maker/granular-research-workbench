@@ -1,0 +1,28 @@
+{
+  "baselines": [
+    {
+      "id": "gbcrs-base",
+      "source": "paper: GBCRS (IJAR 2025); card GBCRS-2025; p. 4, lines 118-146.",
+      "implementation": "Author code adapted only to the shared split and feature pipeline; cover construction unchanged.",
+      "budget": "Same 30-minute pilot budget per dataset; one cover construction pass.",
+      "params": "Granularity chosen on the validation fold, then fixed for test scoring.",
+      "role": "base"
+    },
+    {
+      "id": "naive-concat",
+      "source": "paper: this work; naive concatenation protocol in performance-brief.json; p. 1.",
+      "implementation": "Concatenates both component outputs before the shared classifier; no new integration logic.",
+      "budget": "Same 30-minute pilot budget per dataset as the base.",
+      "params": "Default classifier settings; no per-dataset tuning.",
+      "role": "naive"
+    },
+    {
+      "id": "random-control",
+      "source": "paper: this work; random_control_spec in performance-pilot.json; p. 1.",
+      "implementation": "Data-independent label shuffle with a fixed seed, matched on class balance.",
+      "budget": "Same 30-minute pilot budget per dataset as the base.",
+      "params": "Seed 2025; labels shuffled once per fold, features untouched.",
+      "role": "random"
+    }
+  ]
+}
