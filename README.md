@@ -4,6 +4,8 @@
 
 **本地可跑：** Python 3.10+。选题自测和数学示例只用标准库；Digits 示例需要 NumPy 和 scikit-learn，数据随库提供。以下命令均从仓库根目录执行。
 
+**稳定版状态：** 当前候选仍在集成分支上验证，尚未发布稳定版。发布门槛见[稳定版标准](STABILITY.md)，命令与记录格式见[公开契约](docs/contracts.md)，版本变化见[变更记录](CHANGELOG.md)。
+
 ## 研究入口
 
 | 我想做什么 | 直接入口 | 产物或判定 |
@@ -95,5 +97,16 @@ python -B workbench/workbench.py check workbench/runs/covering-refinement
 python -B skills/research-idea/scripts/replay.py prepare verification-run
 python -B skills/research-idea/scripts/replay.py finish verification-run verdicts.json
 ~~~
+
+## 本地验收
+
+~~~bash
+python -B -S skills/research-idea/scripts/selftest.py
+python -B -m unittest discover -s skills/research-idea/tests -v
+python -B -m unittest discover -s workbench/tests -v
+python -B -m unittest discover -s tests -v
+~~~
+
+最后一条会把已跟踪文件复制到临时目录，在无本地知识库和既有 `ideas/` 的条件下重跑；CI 矩阵见 `.github/workflows/tests.yml`。
 
 **当前验证：** 无库技能自测和工作台回归分别运行。两条工作台案例可生成并复算，另有四个合成案例用于检验复核回放；裁决与参考一致不证明独立盲审。这验证的是流程和复核样例，不代表真实选题成功率已有提升。带新题做对照可直接用[验证记录模板](skills/research-idea/templates/validation-trial.md)；细节见[工作台指南](workbench/README.md)和[独立验收指南](skills/research-idea/VALIDATION.zh.md)。

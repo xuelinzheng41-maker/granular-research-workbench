@@ -42,10 +42,12 @@ class VerifyInputs(unittest.TestCase):
                               env=self.env, encoding="utf-8", capture_output=True, check=False)
 
     def put_record(self, name, value):
-        (self.folder / name).write_text(json.dumps(value), encoding="utf-8")
+        with (self.folder / name).open("w", encoding="utf-8", newline="\n") as stream:
+            stream.write(json.dumps(value))
 
     def put_text(self, name, value):
-        (self.folder / name).write_text(value, encoding="utf-8")
+        with (self.folder / name).open("w", encoding="utf-8", newline="\n") as stream:
+            stream.write(value)
 
     def load(self, name):
         return json.loads((self.folder / name).read_text(encoding="utf-8"))
