@@ -14,6 +14,8 @@ Set top-level `mode` to `performance`. Every candidate needs a `performance` obj
 - `components`: at least two mechanisms, not just module names
 - `component_sources`: required object mapping every declared component to a non-empty source
 - `rejected_pairs`: required list of at least two rejected combinations, each with a reason
+- `anchors`: required list of at least two anchor objects, each with a source and why it supports the claim
+- `refutation`: required object with a non-empty queries list and a non-empty coverage boundary
 - `integration`: where and how the components interact
 - `expected_gain`: a numeric target, not `better`
 - `baselines`: at least two, including the stronger base and a naive concatenation
@@ -43,7 +45,15 @@ The JSON example is [`performance-brief.json`](../skills/research-idea/examples/
 - Duplicate pairs are rejected case-insensitively.
 - A reason should name the blocking issue: same bottleneck, one component subsumes the other, unavailable interface, hidden hyperparameter, budget mismatch, or a result that would only be a definitional audit.
 
-The two candidates in [`performance-brief.json`](../skills/research-idea/examples/performance-brief.json) each carry two component sources and three rejected pairs. Validate the example with:
+### `anchors` and `refutation` (required)
+
+`anchors` is a list of at least two objects. Each object needs a non-blank `source` and a non-blank `why`; the source names the paper card or paper and the locator or section read, and `why` says what that source supports. This is the checklist evidence, not a replacement for the free-form `search_trace`.
+
+`refutation` is an object with a non-empty `queries` list and a non-blank `coverage` string. `queries` records the mechanism keywords actually used with the refutation search; `coverage` states what corpus, cards, or indexes were searched and what was not. An empty object, empty query list, or blank coverage is an error.
+
+Both fields record what was checked and its boundary. The validator does not run the search or prove that the cited sources exist. A `search_trace` string alone is not accepted as anchor or refutation evidence.
+
+The two candidates in [`performance-brief.json`](../skills/research-idea/examples/performance-brief.json) each carry two component sources, three rejected pairs, two anchors, and a refutation record. Validate the example with:
 
     python -B skills/research-idea/scripts/shortlist.py skills/research-idea/examples/performance-brief.json
 
@@ -150,7 +160,7 @@ The example is [`performance-manifest.json`](../skills/research-idea/examples/pe
 
 Run from the repository root with Python 3.10+. The first ten minutes are record editing; a 3-dataset x 3-seed pilot fits in the remaining twenty.
 
-1. Minutes 0-5, brief: copy the example, fill the two components and `component_sources` (one non-empty source per component), list at least two `rejected_pairs` with reasons, and keep naive concatenation among the baselines.
+1. Minutes 0-5, brief: copy the example, fill the two components and `component_sources` (one non-empty source per component), list at least two `rejected_pairs` with reasons, add at least two `anchors` and a `refutation` with queries and coverage, and keep naive concatenation among the baselines.
 
        cp skills/research-idea/examples/performance-brief.json my-brief.json
        python -B skills/research-idea/scripts/shortlist.py my-brief.json

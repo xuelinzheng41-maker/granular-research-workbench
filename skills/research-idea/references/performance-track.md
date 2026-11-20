@@ -14,6 +14,8 @@ Set top-level `mode` to `performance`. Every candidate needs a `performance` obj
 - `components`: at least two mechanisms, not just module names
 - `component_sources`: required object, one non-empty source per declared component (see below)
 - `rejected_pairs`: required list of at least two rejected combinations with reasons (see below)
+- `anchors`: required list of at least two anchor objects, each with `source` and `why` (see below)
+- `refutation`: required object with a non-empty `queries` list and non-empty `coverage` (see below)
 - `integration`: where and how the components interact
 - `expected_gain`: a numeric target, not `better`
 - `baselines`: at least two, including the stronger base and a naive concatenation
@@ -48,7 +50,13 @@ The example maps each component to the paper and the specific mechanism that was
 - Duplicate pairs are rejected case-insensitively.
 - The reason must say why the combination is not worth testing: same bottleneck, subsumption, unavailable interface, hidden hyperparameter, budget mismatch, or a result that would only be a definitional audit.
 
-Both example candidates in [`examples/performance-brief.json`](../examples/performance-brief.json) carry two component sources and three rejected pairs. Validate the example with:
+### `anchors` and `refutation` (required)
+
+`anchors` is a list of at least two objects. Each object has a non-blank `source` and `why`. The source names the paper card or paper plus the locator or section read; `why` says what that source supports in this candidate. This carries the checklist evidence, so a `search_trace` string alone is not enough.
+
+`refutation` is an object with a non-empty `queries` list and a non-blank `coverage` string. `queries` records the mechanism keywords used with the refutation search, and `coverage` states which corpus, cards, or indexes were searched and what was not. A missing object, empty query list, or blank coverage is an error. Presence and form are checked; the search itself is not run, and the cited sources are not verified.
+
+Both example candidates in [`examples/performance-brief.json`](../examples/performance-brief.json) carry two component sources, three rejected pairs, two anchors, and a refutation record. Validate the example with:
 
     python -B skills/research-idea/scripts/shortlist.py skills/research-idea/examples/performance-brief.json
 
@@ -153,7 +161,7 @@ The example is [`examples/performance-manifest.json`](../examples/performance-ma
 
 Run from the repository root with Python 3.10+. The early steps are editing, not training, so a 3-dataset x 3-seed pilot fits in the remaining 20 minutes.
 
-1. Minutes 0-5, brief: copy the example and fill the components, `component_sources` (one per component), `rejected_pairs` (at least two with reasons), and baselines including naive concatenation.
+1. Minutes 0-5, brief: copy the example and fill the components, `component_sources` (one per component), `rejected_pairs` (at least two with reasons), `anchors` (at least two with source and why), `refutation` (queries plus coverage), and baselines including naive concatenation.
 
        cp skills/research-idea/examples/performance-brief.json my-brief.json
        python -B skills/research-idea/scripts/shortlist.py my-brief.json

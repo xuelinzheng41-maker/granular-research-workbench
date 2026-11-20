@@ -77,6 +77,32 @@ def rejected_pairs(contract):
     return sorted(pairs, key=lambda row: row["pair"].casefold())
 
 
+def anchor_evidence(contract):
+    """Require at least two anchor objects, each naming a source and what it supports."""
+    value = contract.get("anchors")
+    if not isinstance(value, list):
+        raise ValueError("performance.anchors must be a list")
+    if len(value) < 2:
+        raise ValueError("performance.anchors must list at least two anchor objects")
+    anchors = []
+    for item in value:
+        if not isinstance(item, dict):
+            raise ValueError("each anchors entry must be an object")
+        anchors.append(dict(source=text(item, "source"), why=text(item, "why")))
+    return anchors
+
+
+def refutation_evidence(contract):
+    """Require the refute queries and a stated coverage boundary, not just a search trace."""
+    refutation = object_field(contract, "refutation")
+    queries = refutation.get("queries")
+    if not isinstance(queries, list) or any(not isinstance(q, str) or not q.strip() for q in queries):
+        raise ValueError("performance.refutation.queries must be a list of non-empty strings")
+    if not queries:
+        raise ValueError("performance.refutation.queries must list at least one query")
+    return dict(queries=[q.strip() for q in queries], coverage=text(refutation, "coverage"))
+
+
 def performance_contract(obj):
     contract = object_field(obj, "performance")
     base_methods = names(contract, "base_methods")
@@ -104,6 +130,8 @@ def performance_contract(obj):
         components=sorted(components),
         component_sources=sources,
         rejected_pairs=pairs,
+        anchors=anchor_evidence(contract),
+        refutation=refutation_evidence(contract),
         integration=text(contract, "integration"),
         expected_gain=text(contract, "expected_gain"),
         baselines=sorted(baselines),

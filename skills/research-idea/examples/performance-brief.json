@@ -61,6 +61,24 @@
             "reason": "Both modules rewrite feature weights, so a remove-one ablation could not attribute the gain to either source."
           }
         ],
+        "anchors": [
+          {
+            "source": "VPGBFRS (ASOC 2025), local paper snapshot, sections 3-4.",
+            "why": "Defines the variable-precision fuzzy rough dependency weighting and reports the base method the hybrid must beat."
+          },
+          {
+            "source": "3W-GBSVM++ (ASOC 2026), local paper snapshot, decision-head section.",
+            "why": "Defines the three-way reject head and the coverage trade-off that the integration reuses."
+          }
+        ],
+        "refutation": {
+          "queries": [
+            "variable precision fuzzy rough three-way rejection",
+            "three-way decision coverage accuracy trade-off",
+            "fuzzy rough feature weighting negative result"
+          ],
+          "coverage": "Local paper snapshot only: three component cards and their cited sections; no external index or full-text corpus search."
+        },
         "integration": "Use VPGBFRS dependency for feature weighting; calibrate the three-way threshold on out-of-fold scores.",
         "expected_gain": ">=1.0% macro-F1 over the stronger base at equal coverage",
         "baselines": [
@@ -135,6 +153,24 @@
             "reason": "The random partition is a control, not a component; folding it in would hide whether ball structure matters."
           }
         ],
+        "anchors": [
+          {
+            "source": "GBCRS (IJAR 2025), local paper snapshot, granular-ball cover section.",
+            "why": "Defines ball construction and the single-cover baseline that the evidence layer must improve on."
+          },
+          {
+            "source": "EAC (local paper snapshot, 2025), local paper snapshot, evidence accumulation section.",
+            "why": "Defines ball-level evidence pooling and the normalization assumption tested by the matched-purity control."
+          }
+        ],
+        "refutation": {
+          "queries": [
+            "granular ball evidence accumulation",
+            "ball-level rough approximation counterexample",
+            "matched purity ball cover"
+          ],
+          "coverage": "Local paper snapshot only: two component cards, their cited sections, and nearby negative-result notes; no external index or full-text corpus search."
+        },
         "integration": "Replace the single-cover decision with a ball-level evidence pool; match m and purity.",
         "expected_gain": ">=1.0% macro-F1 and lower seed variance at matched m/purity",
         "baselines": [
