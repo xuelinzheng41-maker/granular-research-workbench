@@ -6,7 +6,7 @@
 
 **本地可跑：** Python 3.10+。选题自测和数学示例只用标准库；Digits 示例需要 NumPy 和 scikit-learn，数据随库提供。以下命令均从仓库根目录执行。
 
-**版本状态：** 最新 Release 为 [v1.0.1](https://github.com/xuelinzheng41-maker/granular-research-workbench/releases/tag/v1.0.1)（2026-11-20）；当前 main 已并入性能轨道，但尚未发布新 Release。发布门槛见[稳定版标准](STABILITY.md)，命令与记录格式见[公开契约](docs/contracts.md)，版本变化见[变更记录](CHANGELOG.md)。
+**版本状态：** 最新 Release 为 [v1.1.0](https://github.com/xuelinzheng41-maker/granular-research-workbench/releases/tag/v1.1.0)（2026-11-20），主方向为性能轨道。发布门槛见[稳定版标准](STABILITY.md)，命令与记录格式见[公开契约](docs/contracts.md)，版本变化见[变更记录](CHANGELOG.md)。
 
 ## 研究入口
 
