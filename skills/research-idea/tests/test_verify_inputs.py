@@ -74,7 +74,8 @@ class VerifyInputs(unittest.TestCase):
         result = self.verify(0)
         payload = json.loads(result.stdout)
         self.assertEqual(set(payload), {"ok", "plan_sha256", "inputs_sha256", "files",
-                                        "changed", "missing", "extra"})
+                                        "changed", "missing", "extra", "plan_changed",
+                                        "lock_integrity"})
         self.assertTrue(payload["ok"])
         self.assertEqual(payload["plan_sha256"], self.lock["plan_sha256"])
         self.assertEqual(payload["inputs_sha256"], self.lock["inputs_sha256"])
