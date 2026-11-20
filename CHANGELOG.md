@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased — 1.0.0-rc1 stability work
+## 1.0.0 — 2026-11-20
+
+First stable release. The CI matrix passed on `main` for Ubuntu and Windows on Python 3.10–3.12.
 
 - Added a CI matrix for Ubuntu and Windows on Python 3.10–3.12.
 - Added a clean-clone regression test that copies only tracked files and runs the suites without local knowledge bases or prior `ideas/`.
