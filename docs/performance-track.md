@@ -95,6 +95,7 @@ Top-level fields:
 | field | rule |
 | --- | --- |
 | `metric` | non-blank string |
+| `evidence_level` | required; one of `definitional`, `local-substitute`, `paper-worked-example`, `needs_data`; echoed in the gate output |
 | `stage` | required; `pilot` or `full`; seed lists need at least 3 values for `pilot` and at least 5 for `full` |
 | `threshold` | positive number, default `0.01` |
 | `min_datasets` | integer >= 2, default `3` |
@@ -114,6 +115,8 @@ Per dataset:
 
 All seed lists (hybrid, every baseline, every ablation) must share one length and meet the stage minimum. Each row reports `hybrid_sd` and `delta_ci95`, the two-sided 95% paired t-interval of hybrid minus the best baseline.
 
+`evidence_level` is required even for a promising gate result: it declares what kind of evidence the numbers are, not how strong the verdict is. `definitional` and `paper-worked-example` records can pass the form gate but cannot support a performance claim; performance claims require `local-substitute` or stronger. A missing or unknown level is malformed input (exit 2), and the normalized output repeats the accepted level so the record and its result stay aligned.
+
 The top-level random_control_spec is required: method, seed, and matched_on. random_control must be a data-independent shuffle or random-partition control with a fixed seed; a constant vector is rejected. The gate checks form and seed variation, not whether the control is scientifically meaningful.
 
 Verdict:
@@ -124,7 +127,7 @@ Verdict:
 
 Exit 0 means promising, exit 3 means weak/reject, exit 2 means malformed input. `delta_ci95_excludes_zero` is reported for review and a crossed interval is weak, not promising. The gate is a filter, not a full benchmark: it does not validate the underlying numbers, a held-out test, or SOTA.
 
-Pilot records written before this schema lack `stage` or `random_control` and now exit 2. Add `stage`, a `random_control` baseline, and `coverage`/`runtime_s` when constraints are declared; [`performance-pilot.json`](../skills/research-idea/examples/performance-pilot.json) is the template.
+Pilot records written before this schema lack `stage`, `random_control`, or `evidence_level` and now exit 2. Add `stage`, a `random_control` baseline, `evidence_level`, and `coverage`/`runtime_s` when constraints are declared; [`performance-pilot.json`](../skills/research-idea/examples/performance-pilot.json) is the template.
 
 ## Pilot manifest
 
@@ -183,7 +186,7 @@ Run from the repository root with Python 3.10+. The first ten minutes are record
 
    The `--check-files` run is the one that proves the bytes; it fails on a missing path or a hash mismatch.
 
-3. Minutes 10-25, pilot: run three datasets x three seeds on the same split and budget. Record `hybrid`, both base methods, `naive_concat`, `random_control`, and at least one remove-one ablation. Use [`performance-pilot.json`](../skills/research-idea/examples/performance-pilot.json) as the shape; every seed list must have the same length.
+3. Minutes 10-25, pilot: run three datasets x three seeds on the same split and budget. Record `hybrid`, both base methods, `naive_concat`, `random_control`, and at least one remove-one ablation. Declare `evidence_level` at the top level. Use [`performance-pilot.json`](../skills/research-idea/examples/performance-pilot.json) as the shape; every seed list must have the same length.
 
 4. Minutes 25-30, gate:
 

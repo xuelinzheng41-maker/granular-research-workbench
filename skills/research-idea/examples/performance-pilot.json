@@ -1,5 +1,6 @@
 {
   "metric": "macro_f1",
+  "evidence_level": "local-substitute",
   "stage": "pilot",
   "threshold": 0.01,
   "min_datasets": 3,

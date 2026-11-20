@@ -98,6 +98,7 @@ Top-level fields:
 | field | rule |
 | --- | --- |
 | `metric` | non-blank string |
+| `evidence_level` | required; one of `definitional`, `local-substitute`, `paper-worked-example`, `needs_data`; echoed in the gate output |
 | `stage` | required; `pilot` or `full`; every seed list needs at least 3 values for `pilot` and at least 5 for `full` |
 | `threshold` | positive number, default `0.01` |
 | `min_datasets` | integer >= 2, default `3` |
@@ -117,6 +118,8 @@ Per dataset:
 
 All seed lists (hybrid, every baseline, every ablation) must share one length and meet the stage minimum. The gate reports `hybrid_sd` and `delta_ci95` per dataset; `delta_ci95` is the two-sided 95% paired t-interval of hybrid minus the best baseline.
 
+The top-level `evidence_level` is required: `definitional`, `local-substitute`, `paper-worked-example`, or `needs_data`. It declares the kind of evidence behind the numbers and is echoed in the gate output. Missing, blank, or unknown values exit 2. Passing the gate does not upgrade the evidence level; performance claims still require `local-substitute` or stronger.
+
 Verdict:
 
 - `promising`: at least ceil(2 * n_datasets / 3) datasets have mean delta >= threshold; every ablation drops the hybrid mean by at least threshold; every `random_control` margin is >= 0; every coverage/runtime constraint passes.
@@ -125,7 +128,7 @@ Verdict:
 
 Exit codes are 0 for `promising`, 3 for `weak`/`reject`, and 2 for malformed input. `delta_ci95_excludes_zero` is reported for review but is not a pass condition. The gate checks record consistency, not held-out performance, and it is not SOTA evidence.
 
-Pilot records written before this schema lack `stage` or `random_control` and now exit 2; add them together with `coverage`/`runtime_s` if constraints are declared. Use [`examples/performance-pilot.json`](../examples/performance-pilot.json) as the template.
+Pilot records written before this schema lack `stage`, `random_control`, or `evidence_level` and now exit 2; add them together with `coverage`/`runtime_s` if constraints are declared. Use [`examples/performance-pilot.json`](../examples/performance-pilot.json) as the template.
 
 ## Pilot manifest
 
@@ -184,7 +187,7 @@ Run from the repository root with Python 3.10+. The early steps are editing, not
 
    The second manifest command is the one that proves the bytes; it fails if a path is missing or the hash differs.
 
-3. Minutes 10-25, pilot: run three datasets x three seeds on the same split and budget. Record `hybrid`, both base methods, `naive_concat`, `random_control`, and at least one remove-one ablation. Use [`examples/performance-pilot.json`](../examples/performance-pilot.json) as the shape; every seed list must have the same length.
+3. Minutes 10-25, pilot: run three datasets x three seeds on the same split and budget. Record `hybrid`, both base methods, `naive_concat`, `random_control`, and at least one remove-one ablation, and declare `evidence_level` at the top level. Use [`examples/performance-pilot.json`](../examples/performance-pilot.json) as the shape; every seed list must have the same length.
 
 4. Minutes 25-30, gate:
 
