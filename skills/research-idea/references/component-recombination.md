@@ -52,6 +52,12 @@ Reject or defer a pair when:
 - the pair cannot be compared under the same budget
 - the result would only be a definitional audit
 
+Before writing the matrix, rank candidate pairs with the read-only scorer:
+
+    python -B skills/research-idea/scripts/component_score.py skills/research-idea/examples/component-score.json
+
+It scores bottleneck complementarity, cost/data-readiness feasibility, and baseline-discounted expected gain, then sorts by total and id. The score is a ranking aid, not evidence: it checks declared form only. See [`docs/performance-track.md`](../../../docs/performance-track.md#component-compatibility-score) for the schema and formulas.
+
 ## Step 3: propose one hybrid
 
 The agent writes one candidate, not a list of possible directions:

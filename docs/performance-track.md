@@ -76,6 +76,16 @@ Keep the extracted components in one JSON record and validate it before comparin
 
 The top-level `components` list needs at least two objects. Each object records `id`, `paper`, `mechanism`, `input`, `output`, `bottleneck`, `assumption`, `cost`, `known_failure`, and `source`; every value must be a non-blank string and ids must be unique. `source` must name the component's card or paper and include a line/page locator such as `p. 4` or `lines 12-18`. Exit 0 prints a normalized summary; exit 2 means malformed input. This checks form only: it does not verify that the source exists or that the mechanism is implemented faithfully. See [`component-library.json`](../skills/research-idea/examples/component-library.json).
 
+## Component compatibility score
+
+Rank candidate pairs before writing the brief:
+
+    python -B skills/research-idea/scripts/component_score.py skills/research-idea/examples/component-score.json
+
+The top-level `pairs` list needs at least one object. Each pair has an `id`, exactly two `components`, a `baseline_strength` in [0, 1], and an `expected_gain` in [0, 1]. Each component has an `id`, a non-blank `bottleneck`, a non-negative `cost`, and a boolean `data_ready`. `cost` is a relative pilot cost, not minutes; lower is better.
+
+Scores are `complementarity` (1 minus bottleneck word overlap), `feasibility` (ready fraction / (1 + total cost)), `expected_effect` (`expected_gain * baseline_strength`), and `total` (0.4/0.3/0.3). All are in [0, 1] and rounded to at most three decimals. Pairs sort by descending total, then ascending `id`, so ties are deterministic. Exit 0 prints the ranked summary; exit 2 means malformed input. This is a ranking aid, not evidence: it does not run a pilot, verify the declared numbers, or prove a gain. Use the brief and pilot gate for evidence. See [`component-score.json`](../skills/research-idea/examples/component-score.json).
+
 ## Baseline registry
 
 Record every comparison arm in a read-only registry and validate it before running a pilot:

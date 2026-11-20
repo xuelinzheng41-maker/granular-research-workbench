@@ -1,0 +1,22 @@
+{
+  "pairs": [
+    {
+      "id": "cover-plus-evidence",
+      "components": [
+        {"id": "granular-ball-cover", "bottleneck": "Point-level neighborhood computation is expensive and sensitive to noise.", "cost": 0.20, "data_ready": true},
+        {"id": "ball-level-evidence-accumulation", "bottleneck": "Averaging point scores discards disagreement inside a ball.", "cost": 0.15, "data_ready": true}
+      ],
+      "baseline_strength": 0.80,
+      "expected_gain": 0.12
+    },
+    {
+      "id": "cover-plus-point-pruning",
+      "components": [
+        {"id": "granular-ball-cover", "bottleneck": "Point-level neighborhood computation is expensive and sensitive to noise.", "cost": 0.20, "data_ready": true},
+        {"id": "point-density-pruning", "bottleneck": "Point-level neighborhood computation is expensive and sensitive to noise.", "cost": 0.18, "data_ready": true}
+      ],
+      "baseline_strength": 0.80,
+      "expected_gain": 0.12
+    }
+  ]
+}

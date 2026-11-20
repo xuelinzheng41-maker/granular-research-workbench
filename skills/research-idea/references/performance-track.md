@@ -79,6 +79,14 @@ Keep the extracted components in one read-only record and validate it:
 
 Top-level `components` lists at least two objects. Each needs non-blank `id`, `paper`, `mechanism`, `input`, `output`, `bottleneck`, `assumption`, `cost`, `known_failure`, and `source`; ids must be unique, and `source` must name the component's card/paper plus a line/page locator. Exit 0 is valid, 2 is malformed. The validator checks form, not the cited evidence. Example: [`component-library.json`](../examples/component-library.json).
 
+## Component compatibility score
+
+Rank candidate pairs before writing the brief:
+
+    python -B skills/research-idea/scripts/component_score.py skills/research-idea/examples/component-score.json
+
+Top-level `pairs` lists at least one object. Each pair needs `id`, exactly two `components`, `baseline_strength` in [0, 1], and `expected_gain` in [0, 1]. Each component needs `id`, non-blank `bottleneck`, non-negative `cost`, and boolean `data_ready`; `cost` is relative pilot cost, not minutes. Scores are in [0, 1] and rounded to at most three decimals: `complementarity` (1 minus bottleneck word overlap), `feasibility` (ready fraction / (1 + total cost)), `expected_effect` (`expected_gain * baseline_strength`), and `total` (0.4/0.3/0.3). Pairs sort by descending total then ascending `id`; exit 0 is valid, 2 is malformed. The score is a ranking aid, not evidence: it checks form only and proves no gain. Example: [`component-score.json`](../examples/component-score.json).
+
 ## Baseline registry
 
 Keep the comparison arms in one read-only record and validate it before the pilot:
