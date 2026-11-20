@@ -46,8 +46,8 @@ def compare(data):
     skills = names(profile, "skills")
     resources = names(profile, "resources")
     entries = data.get("candidates")
-    if not isinstance(entries, list) or not 2 <= len(entries) <= 3:
-        raise ValueError("provide two or three candidates")
+    if not isinstance(entries, list) or len(entries) < 2:
+        raise ValueError("provide at least two candidates; there is no upper limit")
     ids, sources, rows = set(), set(), []
     for item in entries:
         if not isinstance(item, dict):

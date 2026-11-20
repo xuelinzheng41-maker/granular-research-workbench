@@ -27,6 +27,16 @@ class ShortlistTests(unittest.TestCase):
             modified["profile"].update(change)
             self.assertEqual(shortlist.compare(modified)["eligible_ids"], [], change)
 
+    def test_accepts_more_than_three_candidates(self):
+        source = load(ROOT / "examples/brief.json")
+        for suffix in ("a", "b"):
+            extra = copy.deepcopy(source["candidates"][0])
+            extra.update(id=f"extra-candidate-{suffix}", source_kind="transfer", prior_status="unsearched")
+            source["candidates"].append(extra)
+        result = shortlist.compare(source)
+        self.assertEqual(len(result["candidates"]), 4)
+        self.assertIn("extra-candidate-a", [row["id"] for row in result["candidates"]])
+
     def test_rejects_malformed_or_single_source_briefs(self):
         source = load(ROOT / "examples/brief.json")
         source["candidates"][1]["source_kind"] = source["candidates"][0]["source_kind"]

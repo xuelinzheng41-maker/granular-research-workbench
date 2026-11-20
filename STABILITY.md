@@ -2,7 +2,7 @@
 
 ## What is stable now
 
-The repository is usable for a narrow local research workflow: compare two or three candidates, bind one to a probe, freeze a plan, lock inputs, run a minimal experiment or proof, seal evidence, produce a first-round review packet, and let another researcher check it.
+The repository is usable for a narrow local research workflow: compare at least two candidates, bind one to a probe, freeze a plan, lock inputs, run a minimal experiment or proof, seal evidence, produce a first-round review packet, and let another researcher check it.
 
 It is not yet a general-purpose or fully unattended research product.
 
