@@ -173,7 +173,7 @@ def lock_inputs(folder):
 
 
 def verify_inputs(folder):
-    """Recompute declared input hashes read-only; never creates or repairs a lock."""
+    """Check plan, lock and input hashes read-only; never creates or repairs a lock."""
     folder = Path(folder).resolve()
     plan = read_record(folder, "probe-plan.json")
     entry = plan.get("implementation")
@@ -209,9 +209,17 @@ def verify_inputs(folder):
     files = artifact_digests(present)
     changed = sorted(name for name, digest in locked.items()
                      if name in files and digest != files[name])
-    report = dict(ok=not (changed or missing or set(paths) != set(locked)),
+    current_plan_sha256 = record_digest(plan)
+    plan_changed = current_plan_sha256 != lock["plan_sha256"]
+    lock_integrity = (record_digest(dict(plan_sha256=lock["plan_sha256"], files=locked))
+                      == lock["inputs_sha256"])
+    report = dict(ok=not (changed or missing or set(paths) != set(locked)
+                          or plan_changed or not lock_integrity),
                   plan_sha256=lock["plan_sha256"], inputs_sha256=lock["inputs_sha256"], files=files,
-                  changed=changed, missing=sorted(missing), extra=sorted(set(paths) ^ set(locked)))
+                  changed=changed, missing=sorted(missing), extra=sorted(set(paths) ^ set(locked)),
+                  plan_changed=plan_changed, lock_integrity=lock_integrity)
+    if plan_changed:
+        report["current_plan_sha256"] = current_plan_sha256
     return report
 
 
