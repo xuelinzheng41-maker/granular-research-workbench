@@ -530,8 +530,12 @@ def main():
     )
 
     import launch
+    import research_memory
     launch.add_commands(subparsers)
+    research_memory.add_commands(subparsers)
     args = parser.parse_args()
+    if getattr(args, "memory_dispatch", False):
+        return research_memory.main(args)
     if getattr(args, "launch_dispatch", False):
         return launch.main(args)
     

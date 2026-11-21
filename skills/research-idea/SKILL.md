@@ -15,6 +15,8 @@ description: 面向数学与计算机学生，从文献空位、反常或跨域�
 
 第一次使用按 [快速上手](README.md) 配置独立工作目录，并运行 `python scripts/selftest.py`。接入现有知识库时，再运行 `python scripts/kb.py doctor` 和 `python scripts/selftest.py --with-kb`。无库时直接用可核对的原文、公开数据或数学构造。第三方复验见 [独立验收指南](VALIDATION.zh.md)。
 
+如果项目使用 Research OS，筛选候选前先运行 `python -B research-os/cli.py memory search`（在仓库根目录，按关键词或 `--idea-id` 缩小范围）。查看旧结论的适用范围、阻断原因和可复用组件；阻断不是反证。见[本地研究记忆](../../research-os/README.md#local-research-memory)。
+
 ## 1. 三层结构（这是"可复用"的关键）
 
 | 层 | 文件 | 换方向时要改吗 |

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0 (2026-11-21)
+
+- Research OS records scoped successes, negative results, inconclusive results and blocked studies in a private local SQLite memory.
+- Search by Idea ID or keyword, distinguish candidate/validated/integrated components, and verify evidence links by file digest.
+- Proposal initialization can report prior records without changing any H1, freeze, or independent review contract.
+
 ## 1.2.0 — 2026-11-21
 
 - Cloud 8h optimization added component-library, anchors/refutation, baseline-registry, evidence-level, component-score, and pre-registration validators with tests.

@@ -6,11 +6,13 @@
 
 **本地可跑：** Python 3.10+。选题自测和数学示例只用标准库；Digits 示例需要 NumPy 和 scikit-learn，数据随库提供。以下命令均从仓库根目录执行。
 
-**版本状态：** 最新 Release 为 [v1.2.0](https://github.com/xuelinzheng41-maker/granular-research-workbench/releases/tag/v1.2.0)（2026-11-21），主方向为性能轨道。发布门槛见[稳定版标准](STABILITY.md)，命令与记录格式见[公开契约](docs/contracts.md)，版本变化见[变更记录](CHANGELOG.md)。
+**版本状态：** 最新 Release 为 [v1.4.0](https://github.com/xuelinzheng41-maker/granular-research-workbench/releases/tag/v1.4.0)（2026-11-21），新增本地研究记忆。发布门槛见[稳定版标准](STABILITY.md)，命令与记录格式见[公开契约](docs/contracts.md)，版本变化见[变更记录](CHANGELOG.md)。
 
 ## Research OS v2 预览
 
 本分支包含新的数据核对与本地研究流程。组员可以按 [v2 快速开始](research-os/README.md) 安装依赖，并用随仓库提供的合成示例验证环境；不需要作者的本地数据或私有知识库。
+
+研究记录可通过[本地研究记忆](research-os/README.md#local-research-memory)保存、按 Idea 检索并核验证据。选题前查历史；提案初始化可选显示已有结论或复用组件，不改变审批或复核包。
 
 ## 研究入口
 

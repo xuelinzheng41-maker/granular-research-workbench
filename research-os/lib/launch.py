@@ -155,6 +155,11 @@ def dispatch(args):
         p = read(args.proposal)
         require("retry" not in p, "use retry command for linked attempts")
         require(type(p) is dict and bool(p.get("idea")), "proposal requires an idea")
+        if args.memory_idea_id is not None:
+            from research_memory import advisory, store_path
+            advisory(store_path(args.memory_store), args.memory_idea_id)
+        elif args.memory_store is not None:
+            raise ValueError("--memory-store requires --memory-idea-id")
         run.mkdir(parents=True, exist_ok=False)
         create(run / "proposal.json", p)
     p, sha = proposal(run)
@@ -263,6 +268,8 @@ def add_commands(sub):
             parser.add_argument("reason", choices=("failed", "interrupted"))
         if name == "init":
             parser.add_argument("proposal", type=Path)
+            parser.add_argument("--memory-idea-id", help="Report local prior records for this Idea on stderr")
+            parser.add_argument("--memory-store", type=Path, help="Override the local memory path")
         if name == "approve":
             parser.add_argument("gate", choices=("H1", "H2"))
             parser.add_argument("hash")

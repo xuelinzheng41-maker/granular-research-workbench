@@ -41,6 +41,10 @@ jobs:
         run: python -B -m unittest discover -s workbench/tests -v
         env:
           PYTHONUTF8: "1"
+      - name: Research memory CLI tests
+        run: python -B -m unittest discover -s research-os/tests -p test_research_memory.py -v
+        env:
+          PYTHONUTF8: "1"
       - name: Fresh-clone test
         run: python -B -m unittest discover -s tests -v
         env:
