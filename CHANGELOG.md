@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased — agent-led component discovery
+## 1.2.0 — 2026-11-21
+
+- Cloud 8h optimization added component-library, anchors/refutation, baseline-registry, evidence-level, component-score, and pre-registration validators with tests.
 
 - Documented that the performance track's agent reads paper cards and chooses component pairs itself; the user supplies constraints, not a combination direction.
 - Added the component-recombination reference with extraction fields, compatibility filters, hybrid format, and human veto role.
