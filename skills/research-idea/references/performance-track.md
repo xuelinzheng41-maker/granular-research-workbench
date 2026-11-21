@@ -14,6 +14,9 @@ Set top-level `mode` to `performance`. Every candidate needs a `performance` obj
 - `components`: at least two mechanisms, not just module names
 - `component_sources`: required object, one non-empty source per declared component (see below)
 - `rejected_pairs`: required list of at least two rejected combinations with reasons (see below)
+- `anchors`: required list of at least two anchor objects, each with `source` and `why` (see below)
+- `refutation`: required object with a non-empty `queries` list and non-empty `coverage` (see below)
+- `pre_registration`: required object binding datasets, seeds, threshold, stage, and split (see below)
 - `integration`: where and how the components interact
 - `expected_gain`: a numeric target, not `better`
 - `baselines`: at least two, including the stronger base and a naive concatenation
@@ -48,7 +51,19 @@ The example maps each component to the paper and the specific mechanism that was
 - Duplicate pairs are rejected case-insensitively.
 - The reason must say why the combination is not worth testing: same bottleneck, subsumption, unavailable interface, hidden hyperparameter, budget mismatch, or a result that would only be a definitional audit.
 
-Both example candidates in [`examples/performance-brief.json`](../examples/performance-brief.json) carry two component sources and three rejected pairs. Validate the example with:
+### `anchors` and `refutation` (required)
+
+`anchors` is a list of at least two objects. Each object has a non-blank `source` and `why`. The source names the paper card or paper plus the locator or section read; `why` says what that source supports in this candidate. This carries the checklist evidence, so a `search_trace` string alone is not enough.
+
+`refutation` is an object with a non-empty `queries` list and a non-blank `coverage` string. `queries` records the mechanism keywords used with the refutation search, and `coverage` states which corpus, cards, or indexes were searched and what was not. A missing object, empty query list, or blank coverage is an error. Presence and form are checked; the search itself is not run, and the cited sources are not verified.
+
+### `pre_registration` (required)
+
+`pre_registration` binds the comparison before results: at least two non-empty `datasets`, at least three unique non-negative integer `seeds`, a positive `threshold`, a `stage` of `pilot` or `full`, and a non-blank `split` policy. A missing block, fewer than two datasets, fewer than three unique seeds, a non-positive threshold, an unknown stage, or a blank split is an error.
+
+The validator checks this block only and echoes the normalized values in the brief output. It does not compare the block with `performance.datasets`, a manifest, or a pilot record, does not prove that the declared seeds or split were used, and does not upgrade the evidence. The manifest binds data files and the gate binds results.
+
+Both example candidates in [`examples/performance-brief.json`](../examples/performance-brief.json) carry two component sources, three rejected pairs, two anchors, a refutation record, and a pre-registration block. Validate the example with:
 
     python -B skills/research-idea/scripts/shortlist.py skills/research-idea/examples/performance-brief.json
 
@@ -63,6 +78,30 @@ Use two complementary components first, not a five-way stack:
 
 Components must address different bottlenecks. `Both improve accuracy` is not a reason to combine them.
 
+## Component library
+
+Keep the extracted components in one read-only record and validate it:
+
+    python -B skills/research-idea/scripts/component_library.py skills/research-idea/examples/component-library.json
+
+Top-level `components` lists at least two objects. Each needs non-blank `id`, `paper`, `mechanism`, `input`, `output`, `bottleneck`, `assumption`, `cost`, `known_failure`, and `source`; ids must be unique, and `source` must name the component's card/paper plus a line/page locator. Exit 0 is valid, 2 is malformed. The validator checks form, not the cited evidence. Example: [`component-library.json`](../examples/component-library.json).
+
+## Component compatibility score
+
+Rank candidate pairs before writing the brief:
+
+    python -B skills/research-idea/scripts/component_score.py skills/research-idea/examples/component-score.json
+
+Top-level `pairs` lists at least one object. Each pair needs `id`, exactly two `components`, `baseline_strength` in [0, 1], and `expected_gain` in [0, 1]. Each component needs `id`, non-blank `bottleneck`, non-negative `cost`, and boolean `data_ready`; `cost` is relative pilot cost, not minutes. Scores are in [0, 1] and rounded to at most three decimals: `complementarity` (1 minus bottleneck word overlap), `feasibility` (ready fraction / (1 + total cost)), `expected_effect` (`expected_gain * baseline_strength`), and `total` (0.4/0.3/0.3). Pairs sort by descending total then ascending `id`; exit 0 is valid, 2 is malformed. The score is a ranking aid, not evidence: it checks form only and proves no gain. Example: [`component-score.json`](../examples/component-score.json).
+
+## Baseline registry
+
+Keep the comparison arms in one read-only record and validate it before the pilot:
+
+    python -B skills/research-idea/scripts/baseline_registry.py skills/research-idea/examples/baseline-registry.json
+
+Top-level `baselines` lists at least two objects. Each needs non-blank `id`, `source`, `implementation`, `budget`, `params`, and `role`; ids must be unique, and `role` must be `base`, `naive`, or `random`. At least one `naive` entry (the naive concatenation) and one `random` entry (the fixed-seed random control) are required. `budget` and `params` record fairness: every arm should use the same split, budget, and tuning rule. Exit 0 is valid, 2 is malformed. The validator checks form, not the cited implementation or the actual run-time budgets. Example: [`baseline-registry.json`](../examples/baseline-registry.json).
+
 ## Pilot gate
 
 The gate reads a separate pilot record. The brief says what will be tested; the pilot record reports what happened. Run:
@@ -74,6 +113,7 @@ Top-level fields:
 | field | rule |
 | --- | --- |
 | `metric` | non-blank string |
+| `evidence_level` | required; one of `definitional`, `local-substitute`, `paper-worked-example`, `needs_data`; echoed in the gate output |
 | `stage` | required; `pilot` or `full`; every seed list needs at least 3 values for `pilot` and at least 5 for `full` |
 | `threshold` | positive number, default `0.01` |
 | `min_datasets` | integer >= 2, default `3` |
@@ -93,6 +133,8 @@ Per dataset:
 
 All seed lists (hybrid, every baseline, every ablation) must share one length and meet the stage minimum. The gate reports `hybrid_sd` and `delta_ci95` per dataset; `delta_ci95` is the two-sided 95% paired t-interval of hybrid minus the best baseline.
 
+The top-level `evidence_level` is required: `definitional`, `local-substitute`, `paper-worked-example`, or `needs_data`. It declares the kind of evidence behind the numbers and is echoed in the gate output. Missing, blank, or unknown values exit 2. Passing the gate does not upgrade the evidence level; performance claims still require `local-substitute` or stronger.
+
 Verdict:
 
 - `promising`: at least ceil(2 * n_datasets / 3) datasets have mean delta >= threshold; every ablation drops the hybrid mean by at least threshold; every `random_control` margin is >= 0; every coverage/runtime constraint passes.
@@ -101,7 +143,7 @@ Verdict:
 
 Exit codes are 0 for `promising`, 3 for `weak`/`reject`, and 2 for malformed input. `delta_ci95_excludes_zero` is reported for review but is not a pass condition. The gate checks record consistency, not held-out performance, and it is not SOTA evidence.
 
-Pilot records written before this schema lack `stage` or `random_control` and now exit 2; add them together with `coverage`/`runtime_s` if constraints are declared. Use [`examples/performance-pilot.json`](../examples/performance-pilot.json) as the template.
+Pilot records written before this schema lack `stage`, `random_control`, or `evidence_level` and now exit 2; add them together with `coverage`/`runtime_s` if constraints are declared. Use [`examples/performance-pilot.json`](../examples/performance-pilot.json) as the template.
 
 ## Pilot manifest
 
@@ -145,7 +187,7 @@ The example is [`examples/performance-manifest.json`](../examples/performance-ma
 
 Run from the repository root with Python 3.10+. The early steps are editing, not training, so a 3-dataset x 3-seed pilot fits in the remaining 20 minutes.
 
-1. Minutes 0-5, brief: copy the example and fill the components, `component_sources` (one per component), `rejected_pairs` (at least two with reasons), and baselines including naive concatenation.
+1. Minutes 0-5, brief: copy the example and fill the components, `component_sources` (one per component), `rejected_pairs` (at least two with reasons), `anchors` (at least two with source and why), `refutation` (queries plus coverage), `pre_registration` (datasets, seeds, threshold, stage, split), and baselines including naive concatenation.
 
        cp skills/research-idea/examples/performance-brief.json my-brief.json
        python -B skills/research-idea/scripts/shortlist.py my-brief.json
@@ -160,7 +202,7 @@ Run from the repository root with Python 3.10+. The early steps are editing, not
 
    The second manifest command is the one that proves the bytes; it fails if a path is missing or the hash differs.
 
-3. Minutes 10-25, pilot: run three datasets x three seeds on the same split and budget. Record `hybrid`, both base methods, `naive_concat`, `random_control`, and at least one remove-one ablation. Use [`examples/performance-pilot.json`](../examples/performance-pilot.json) as the shape; every seed list must have the same length.
+3. Minutes 10-25, pilot: run three datasets x three seeds on the same split and budget. Record `hybrid`, both base methods, `naive_concat`, `random_control`, and at least one remove-one ablation, and declare `evidence_level` at the top level. Use [`examples/performance-pilot.json`](../examples/performance-pilot.json) as the shape; every seed list must have the same length.
 
 4. Minutes 25-30, gate:
 

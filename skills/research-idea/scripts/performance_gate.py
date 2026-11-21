@@ -6,22 +6,24 @@ remove-one ablation drop, a random-control baseline, paired uncertainty, and
 optional coverage/runtime constraints. It is a filter, not a benchmark.
 
 Top-level input:
-  metric        non-blank string
-  stage         "pilot" (every seed list needs at least 3 entries) or
-                "full" (every seed list needs at least 5 entries)
-  threshold     positive number, default 0.01
-  min_datasets  integer >= 2, default 3
-  constraints   optional object with min_coverage (0 < n <= 1) and/or
-                max_runtime_s (n > 0)
-  datasets      at least min_datasets objects, each with:
-                  name       unique non-blank string
-                  hybrid     seed list
-                  baselines  object with at least two lists, including
-                             naive_concat and random_control
-                  ablations  object with at least one seed list
-                  coverage   0..1, required when constraints.min_coverage is set
-                  runtime_s  positive seconds, required when
-                             constraints.max_runtime_s is set
+  metric         non-blank string
+  stage          "pilot" (every seed list needs at least 3 entries) or
+                 "full" (every seed list needs at least 5 entries)
+  evidence_level one of definitional, local-substitute,
+                 paper-worked-example, needs_data
+  threshold      positive number, default 0.01
+  min_datasets   integer >= 2, default 3
+  constraints    optional object with min_coverage (0 < n <= 1) and/or
+                 max_runtime_s (n > 0)
+  datasets       at least min_datasets objects, each with:
+                   name       unique non-blank string
+                   hybrid     seed list
+                   baselines  object with at least two lists, including
+                              naive_concat and random_control
+                   ablations  object with at least one seed list
+                   coverage   0..1, required when constraints.min_coverage is set
+                   runtime_s  positive seconds, required when
+                              constraints.max_runtime_s is set
 
 Seed lists for hybrid, every baseline, and every ablation must share one length.
 Each row reports hybrid_sd and delta_ci95, the paired 95% t-interval of
@@ -36,6 +38,7 @@ import sys
 from pathlib import Path
 
 STAGES = {"pilot": 3, "full": 5}
+EVIDENCE_LEVELS = ("definitional", "local-substitute", "paper-worked-example", "needs_data")
 MANDATORY_BASELINES = ("naive_concat", "random_control")
 CONSTRAINT_KEYS = ("min_coverage", "max_runtime_s")
 T95 = {
@@ -137,6 +140,11 @@ def compare(data):
     if not isinstance(data, dict):
         raise ValueError("top-level input must be an object")
     metric = text(data, "metric")
+    evidence_level = text(data, "evidence_level")
+    if evidence_level not in EVIDENCE_LEVELS:
+        raise ValueError(
+            "evidence_level must be one of: " + ", ".join(EVIDENCE_LEVELS)
+        )
     stage = text(data, "stage").lower()
     if stage not in STAGES:
         raise ValueError("stage must be pilot or full")
@@ -249,6 +257,7 @@ def compare(data):
         verdict = "reject"
     return dict(
         metric=metric,
+        evidence_level=evidence_level,
         stage=stage,
         min_samples=minimum,
         threshold=threshold,

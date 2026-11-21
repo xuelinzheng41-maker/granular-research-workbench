@@ -2,12 +2,14 @@
 """Compare candidate probes against declared resources; never certifies novelty."""
 import argparse
 import json
+import math
 import sys
 from pathlib import Path
 
 SOURCES = {"literature", "anomaly", "transfer"}
 REVIEW_STATES = {"unsearched", "no_overlap_retrieved", "overlap", "counterexample"}
 MODES = {"audit", "performance"}
+STAGES = {"pilot", "full"}
 
 
 def text(obj, key):
@@ -77,6 +79,57 @@ def rejected_pairs(contract):
     return sorted(pairs, key=lambda row: row["pair"].casefold())
 
 
+def anchor_evidence(contract):
+    """Require at least two anchor objects, each naming a source and what it supports."""
+    value = contract.get("anchors")
+    if not isinstance(value, list):
+        raise ValueError("performance.anchors must be a list")
+    if len(value) < 2:
+        raise ValueError("performance.anchors must list at least two anchor objects")
+    anchors = []
+    for item in value:
+        if not isinstance(item, dict):
+            raise ValueError("each anchors entry must be an object")
+        anchors.append(dict(source=text(item, "source"), why=text(item, "why")))
+    return anchors
+
+
+def refutation_evidence(contract):
+    """Require the refute queries and a stated coverage boundary, not just a search trace."""
+    refutation = object_field(contract, "refutation")
+    queries = refutation.get("queries")
+    if not isinstance(queries, list) or any(not isinstance(q, str) or not q.strip() for q in queries):
+        raise ValueError("performance.refutation.queries must be a list of non-empty strings")
+    if not queries:
+        raise ValueError("performance.refutation.queries must list at least one query")
+    return dict(queries=[q.strip() for q in queries], coverage=text(refutation, "coverage"))
+
+
+def pre_registration_block(contract):
+    """Bind datasets, seeds, threshold, stage, and split before any results exist."""
+    block = object_field(contract, "pre_registration")
+    datasets = names(block, "datasets")
+    if len(datasets) < 2:
+        raise ValueError("performance.pre_registration.datasets must list at least two datasets")
+    raw_seeds = block.get("seeds")
+    if not isinstance(raw_seeds, list) or any(type(seed) is not int or seed < 0 for seed in raw_seeds):
+        raise ValueError("performance.pre_registration.seeds must be a list of non-negative integers")
+    seeds = sorted(set(raw_seeds))
+    if len(seeds) < 3:
+        raise ValueError("performance.pre_registration.seeds must list at least three unique seeds")
+    if len(seeds) != len(raw_seeds):
+        raise ValueError("performance.pre_registration.seeds must not repeat a seed")
+    threshold = block.get("threshold")
+    if (isinstance(threshold, bool) or not isinstance(threshold, (int, float))
+            or not math.isfinite(threshold) or threshold <= 0):
+        raise ValueError("performance.pre_registration.threshold must be a positive number")
+    stage = text(block, "stage")
+    if stage not in STAGES:
+        raise ValueError("performance.pre_registration.stage must be pilot or full")
+    return dict(datasets=sorted(datasets), seeds=seeds, threshold=threshold,
+                stage=stage, split=text(block, "split"))
+
+
 def performance_contract(obj):
     contract = object_field(obj, "performance")
     base_methods = names(contract, "base_methods")
@@ -104,6 +157,9 @@ def performance_contract(obj):
         components=sorted(components),
         component_sources=sources,
         rejected_pairs=pairs,
+        anchors=anchor_evidence(contract),
+        refutation=refutation_evidence(contract),
+        pre_registration=pre_registration_block(contract),
         integration=text(contract, "integration"),
         expected_gain=text(contract, "expected_gain"),
         baselines=sorted(baselines),

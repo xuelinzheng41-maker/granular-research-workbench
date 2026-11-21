@@ -14,6 +14,8 @@ For each candidate paper, write one row:
 
 | field | meaning |
 |---|---|
+| id | stable name used by the compatibility matrix |
+| paper | paper or card title with year |
 | mechanism | what the method actually does, not its name |
 | input | what representation it consumes |
 | output | what it produces |
@@ -21,8 +23,15 @@ For each candidate paper, write one row:
 | assumption | when it is valid |
 | cost | runtime, memory, implementation burden |
 | known failure | where it breaks or is untested |
+| source | card/paper plus line or page locator |
 
 A card without a mechanism row is only a lead, not a component.
+
+Record the rows in one JSON library and validate it before comparing pairs:
+
+    python -B skills/research-idea/scripts/component_library.py skills/research-idea/examples/component-library.json
+
+At least two components are required; ids must be unique, every field must be non-blank, and `source` must name the component's card/paper with a line/page locator. The validator checks form only, not whether the source supports the row.
 
 ## Step 2: build a compatibility matrix
 
@@ -42,6 +51,12 @@ Reject or defer a pair when:
 - the only claimed gain is "more information"
 - the pair cannot be compared under the same budget
 - the result would only be a definitional audit
+
+Before writing the matrix, rank candidate pairs with the read-only scorer:
+
+    python -B skills/research-idea/scripts/component_score.py skills/research-idea/examples/component-score.json
+
+It scores bottleneck complementarity, cost/data-readiness feasibility, and baseline-discounted expected gain, then sorts by total and id. The score is a ranking aid, not evidence: it checks declared form only. See [`docs/performance-track.md`](../../../docs/performance-track.md#component-compatibility-score) for the schema and formulas.
 
 ## Step 3: propose one hybrid
 

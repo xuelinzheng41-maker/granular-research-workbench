@@ -1,0 +1,28 @@
+{
+  "components": [
+    {
+      "id": "granular-ball-cover",
+      "paper": "GBCRS (IJAR 2025)",
+      "mechanism": "Builds a granular-ball cover from the data and uses ball-level approximations instead of point-level neighborhoods.",
+      "input": "A labeled feature table with a chosen granularity parameter.",
+      "output": "A set of granular balls with labels and a ball-level rough approximation.",
+      "bottleneck": "Point-level neighborhood computation is expensive and sensitive to noise.",
+      "assumption": "The chosen granularity yields balls that are label-consistent enough for the downstream task.",
+      "cost": "One cover construction pass; memory linear in the number of balls.",
+      "known_failure": "Mixed-label balls can hide minority-class structure when the granularity is too coarse.",
+      "source": "paper: GBCRS (IJAR 2025); card GBCRS-2025; p. 4, lines 118-146."
+    },
+    {
+      "id": "ball-level-evidence-accumulation",
+      "paper": "EAC (local paper snapshot, 2025)",
+      "mechanism": "Accumulates per-ball evidence into a class decision instead of averaging sample scores.",
+      "input": "Granular balls with per-ball class evidence or membership masses.",
+      "output": "A class decision with an evidence margin for each ball.",
+      "bottleneck": "Averaging point scores discards disagreement inside a ball.",
+      "assumption": "Per-ball evidence is comparable across balls of different sizes.",
+      "cost": "One accumulation pass over balls; no extra model training.",
+      "known_failure": "Evidence from large balls can dominate small but informative balls without normalization.",
+      "source": "paper: EAC (local paper snapshot, 2025); card EAC-2025; p. 3, lines 42-68."
+    }
+  ]
+}

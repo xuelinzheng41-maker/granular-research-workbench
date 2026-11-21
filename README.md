@@ -12,7 +12,7 @@
 
 | 我想做什么 | 直接入口 | 产物或判定 |
 | --- | --- | --- |
-| 找效果更好的 hybrid / 优化算法 | [性能轨道](docs/performance-track.md) · [性能 brief 示例](skills/research-idea/examples/performance-brief.json) · [pilot gate](skills/research-idea/scripts/performance_gate.py) · [pilot manifest 校验](skills/research-idea/scripts/performance_manifest.py) | 候选、组件来源/淘汰对、manifest、pilot 判定 |
+| 找效果更好的 hybrid / 优化算法 | [性能轨道](docs/performance-track.md) · [性能 brief 示例](skills/research-idea/examples/performance-brief.json) · [基线登记表示例](skills/research-idea/examples/baseline-registry.json) · [pilot gate](skills/research-idea/scripts/performance_gate.py) · [pilot manifest 校验](skills/research-idea/scripts/performance_manifest.py) | 候选、组件来源/淘汰对、基线登记表、manifest、pilot 判定 |
 | 核对粗糙集与粒球的定义和基线 | [领域定义与复现边界](workbench/domain/definitions.md) · [研究任务模板](workbench/templates/study.md) | 算子、假设、对照与证据口径 |
 | 从几条想法中挑能做的题 | [候选筛选脚本](skills/research-idea/scripts/shortlist.py) · [输入示例](skills/research-idea/examples/brief.json) | 合格候选、暂缓原因和最小验证 |
 | 查论文卡、近邻工作与反例 | [知识库工具](skills/research-idea/scripts/kb.py) · [反例检索工具](skills/research-idea/scripts/refute.py) | 文献锚点、已有反证和检索范围 |
