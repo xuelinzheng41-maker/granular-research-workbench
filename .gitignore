@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+/runs/
+/decisions/
+/ideas/
+/local-registry.json
+/datasets-local/
+/kb-local/

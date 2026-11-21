@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://research-os.example/contracts/01-problem.schema.json",
+  "title": "Problem Card Schema",
+  "description": "Stage 01: Problem definition with falsifiable question",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "stage",
+    "kind",
+    "record_id",
+    "attempt",
+    "created_at",
+    "produced_by",
+    "depends_on",
+    "inputs",
+    "checks",
+    "payload",
+    "payload_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 2
+    },
+    "stage": {
+      "type": "string",
+      "const": "01-problem"
+    },
+    "kind": {
+      "type": "string",
+      "const": "problem_card"
+    },
+    "record_id": {
+      "type": "string",
+      "pattern": "^01-problem@\\d+$"
+    },
+    "attempt": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "produced_by": {
+      "type": "object",
+      "required": ["tool", "version", "tool_sha256", "by"],
+      "properties": {
+        "tool": {
+          "type": "string",
+          "const": "research-os"
+        },
+        "version": {
+          "type": "string"
+        },
+        "tool_sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "by": {
+          "type": "string",
+          "enum": ["agent", "human"]
+        }
+      }
+    },
+    "depends_on": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "required": ["constraints_sha256"],
+      "properties": {
+        "constraints_sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["tool", "exit", "output_sha256"],
+        "properties": {
+          "tool": {
+            "type": "string"
+          },
+          "exit": {
+            "type": "integer"
+          },
+          "output_sha256": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        }
+      }
+    },
+    "payload": {
+      "type": "object",
+      "required": ["question", "scope", "decision_who", "falsifier", "kind"],
+      "properties": {
+        "question": {
+          "type": "string",
+          "minLength": 10,
+          "description": "A falsifiable research question"
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 5,
+          "description": "Conditions under which the question applies"
+        },
+        "decision_who": {
+          "type": "string",
+          "minLength": 5,
+          "description": "Who will make what decision based on this result"
+        },
+        "falsifier": {
+          "type": "string",
+          "minLength": 5,
+          "description": "What observation would kill this claim"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["theory", "empirical"]
+        }
+      }
+    },
+    "payload_sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}

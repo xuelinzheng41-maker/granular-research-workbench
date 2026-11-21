@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "root": "examples/data",
+  "datasets": [
+    {
+      "id": "ExampleSet",
+      "aliases": [
+        "Example Set"
+      ],
+      "status": "ready",
+      "loader": "txt_pair",
+      "data": "features.txt",
+      "labels": "labels.txt",
+      "rows": 6,
+      "features": 2
+    }
+  ]
+}
